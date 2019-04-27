@@ -47,8 +47,12 @@ func startServerAndHandleSignals(server *http.Server, port int, shutdownTimeout 
 }
 
 func hashbashWebapp(_ *cobra.Command, _ []string) {
+	logLevel, _ := log.ParseLevel(viper.GetString("log-level"))
+	log.SetLevel(logLevel)
+
 	db := database.GetConnectionOrDie()
 	port := viper.GetInt("web-port")
+
 	router := mux.NewRouter()
 
 	server := http.Server{
@@ -60,5 +64,6 @@ func hashbashWebapp(_ *cobra.Command, _ []string) {
 	}
 
 	api.AddRainbowTableRoutes(router, db)
+	api.WalkRoutes(router)
 	startServerAndHandleSignals(&server, port, viper.GetDuration("shutdown-timeout"))
 }

@@ -46,6 +46,10 @@ func getPageConfigFromRequest(writer http.ResponseWriter, request *http.Request)
 	}
 
 	sortKey := queryParameters.Get("sortKey")
+	if sortKey == "" {
+		sortKey = "id"
+	}
+
 	descending := queryParameters.Get("sortOrder") != "ASC"
 
 	return database.PageConfig{
