@@ -16,6 +16,11 @@ func AddRainbowTableRoutes(router *mux.Router, db *gorm.DB) {
 		HandleFunc("/api/rainbow-table", getListRainbowTablesHandler(db)).
 		Methods("GET")
 
+	// GET /api/rainbow-table/{id}
+	router.
+		HandleFunc("/api/rainbow-table/{id:[0-9]+}", getRainbowTableByIdHandler(db)).
+		Methods("GET")
+
 	// GET /api/rainbow-table/count
 	router.
 		HandleFunc("/api/rainbow-table/count", getCountRainbowTablesHandler(db)).
@@ -36,6 +41,29 @@ func getListRainbowTablesHandler(db *gorm.DB) func(writer http.ResponseWriter, r
 		json.
 			NewEncoder(writer).
 			Encode(rainbowTables)
+	}
+}
+
+func getRainbowTableByIdHandler(db *gorm.DB) func(writer http.ResponseWriter, request *http.Request) {
+	return func(writer http.ResponseWriter, request *http.Request) {
+		rainbowTableId, err := getIdPathParamValue(writer, request)
+		if err != nil {
+			return
+		}
+
+		var rainbowTable model.RainbowTable
+		db.
+			Where("id = ?", rainbowTableId).
+			First(&rainbowTable)
+
+		if rainbowTable.Name == "" {
+			writer.WriteHeader(404)
+			return
+		}
+
+		json.
+			NewEncoder(writer).
+			Encode(rainbowTable)
 	}
 }
 

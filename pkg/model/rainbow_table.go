@@ -5,7 +5,7 @@ import (
 )
 
 type RainbowTable struct {
-	ID              int64     `gorm:"primary_key,column:id"json:"id"`
+	ID              int16     `gorm:"primary_key,column:id"json:"id"`
 	Name            string    `gorm:"column:name"json:"name"`
 	NumChains       int64     `gorm:"column:numChains"json:"numChains"`
 	ChainLength     int64     `gorm:"column:chainLength"json:"chainLength"`
