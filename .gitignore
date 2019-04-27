@@ -1,0 +1,16 @@
+application-OVR.properties
+.idea/
+*.iml
+*.jar
+*.tgz
+*.versionsBackup
+jscripts/*.sh
+jscripts/utilities/*.sh
+requirements.lock
+_version.json
+node_modules/
+target/
+version.txt
+version-poms
+cmd/hashbash-cli/hashbash-cli
+cmd/hashbash-webapp/hashbash-webapp

@@ -1,0 +1,29 @@
+version: "3"
+
+volumes:
+  hashbash-data:
+    external: true
+
+services:
+  mysql:
+    image: mysql:5.7
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - 3306:3306
+    volumes:
+      - hashbash-data:/var/lib/mysql
+
+  rabbitmq:
+    image: rabbitmq:3.6-management-alpine
+    ports:
+      - 5672:5672
+      - 15672:15672
+      - 55672:55672
+
+  nginx:
+    image: jnorwood/hashbash-nginx:release-20190425-1647
+    extra_hosts:
+      - hashbash-webapp:${HASHBASH_HOST_IP_ADDRESS}
+    ports:
+      - 80:80

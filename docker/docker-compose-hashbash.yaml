@@ -1,0 +1,34 @@
+version: "3"
+
+volumes:
+  frontend-public-volume:
+
+services:
+  mysql:
+    image: mysql:5.7
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+    ports:
+      - 3306:3306
+
+  rabbitmq:
+    image: rabbitmq:3.6-management-alpine
+    ports:
+      - 5672:5672
+      - 15672:15672
+      - 55672:55672
+
+  nginx:
+    image: jnorwood/hashbash-nginx:release-20190425-1647
+    ports:
+      - 80:80
+
+  hashbash-consumers:
+    image: jnorwood/hashbash-consumers:current
+    environment:
+      - SPRING_PROFILES_ACTIVE=LCL,DCK,OVR
+
+  hashbash-webapp:
+    image: jnorwood/hashbash-webapp:current
+    environment:
+      - SPRING_PROFILES_ACTIVE=LCL,DCK,OVR
