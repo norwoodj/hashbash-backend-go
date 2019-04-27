@@ -64,6 +64,8 @@ func hashbashWebapp(_ *cobra.Command, _ []string) {
 	}
 
 	api.AddRainbowTableRoutes(router, db)
+	api.AddRainbowTableSearchRoutes(router, db)
 	api.WalkRoutes(router)
+
 	startServerAndHandleSignals(&server, port, viper.GetDuration("shutdown-timeout"))
 }
