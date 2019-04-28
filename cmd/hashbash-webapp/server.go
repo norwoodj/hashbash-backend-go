@@ -3,9 +3,12 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/norwoodj/hashbash-backend-go/pkg/frontend"
+	"github.com/norwoodj/hashbash-backend-go/pkg/service"
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -46,15 +49,49 @@ func startServerAndHandleSignals(server *http.Server, port int, shutdownTimeout 
 	os.Exit(0)
 }
 
+func walkRoutes(router *mux.Router) {
+	log.Debugf("Walking registered routes...")
+
+	router.Walk(func(route *mux.Route, router *mux.Router, ancestors []*mux.Route) error {
+		pathTemplate, err := route.GetPathTemplate()
+		if err == nil {
+			log.Debugf("Route: %s", pathTemplate)
+		}
+
+		pathRegexp, err := route.GetPathRegexp()
+		if err == nil {
+			log.Debugf("Path regexp: %s", pathRegexp)
+		}
+
+		queriesTemplates, err := route.GetQueriesTemplates()
+		if err == nil {
+			log.Debugf("Queries templates: [%s]", strings.Join(queriesTemplates, ","))
+		}
+
+		queriesRegexps, err := route.GetQueriesRegexp()
+		if err == nil {
+			log.Debugf("Queries regexps: [%s]", strings.Join(queriesRegexps, ","))
+		}
+
+		methods, err := route.GetMethods()
+		if err == nil {
+			log.Debugf("Methods: [%s]", strings.Join(methods, ","))
+		}
+
+		return nil
+	})
+}
+
 func hashbashWebapp(_ *cobra.Command, _ []string) {
 	logLevel, _ := log.ParseLevel(viper.GetString("log-level"))
 	log.SetLevel(logLevel)
 
 	db := database.GetConnectionOrDie()
+	rainbowTableService := service.NewRainbowTableService(db)
+	rainbowTableSearchService := service.NewRainbowTableSearchService(db)
+
 	port := viper.GetInt("web-port")
-
 	router := mux.NewRouter()
-
 	server := http.Server{
 		Addr:         fmt.Sprintf("0.0.0.0:%d", port),
 		WriteTimeout: time.Second * 15,
@@ -63,9 +100,16 @@ func hashbashWebapp(_ *cobra.Command, _ []string) {
 		Handler:      router,
 	}
 
-	api.AddRainbowTableRoutes(router, db)
-	api.AddRainbowTableSearchRoutes(router, db)
-	api.WalkRoutes(router)
+	api.AddRainbowTableRoutes(router, rainbowTableService)
+	api.AddRainbowTableSearchRoutes(router, rainbowTableSearchService)
 
+	frontendTemplatesDir := viper.GetString("frontend-template-path")
+	err := frontend.RegisterTemplateHandler(router, frontendTemplatesDir)
+	if err != nil {
+		log.Errorf("Failed to read frontend directory %s: %s", frontendTemplatesDir, err)
+		os.Exit(1)
+	}
+
+	walkRoutes(router)
 	startServerAndHandleSignals(&server, port, viper.GetDuration("shutdown-timeout"))
 }

@@ -4,6 +4,9 @@ import (
 	"time"
 )
 
+const SearchFound = "FOUND"
+const SearchNotFound = "NOT_FOUND"
+
 type RainbowTableSearch struct {
 	ID              int64     `gorm:"primary_key,column:id"json:"id"`
 	RainbowTableId  int16     `gorm:"column:rainbowTableId"json:"rainbowTableId"`

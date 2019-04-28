@@ -1,33 +1,31 @@
 package api
 
 import (
+	"github.com/norwoodj/hashbash-backend-go/pkg/service"
 	"net/http"
-
-	"github.com/norwoodj/hashbash-backend-go/pkg/database"
-	"github.com/norwoodj/hashbash-backend-go/pkg/util"
 )
 
-func getPageConfigFromRequest(writer http.ResponseWriter, request *http.Request) (database.PageConfig, error) {
+func getPageConfigFromRequest(writer http.ResponseWriter, request *http.Request) (service.PageConfig, error) {
 	queryParameters := request.URL.Query()
 
-	pageNumber, err := getIntQueryParamValue(queryParameters, util.PagingQueryPageNumber, 0, writer)
+	pageNumber, err := getIntQueryParamValue(queryParameters, PagingQueryPageNumber, 0, writer)
 	if err != nil {
-		return database.PageConfig{}, err
+		return service.PageConfig{}, err
 	}
 
-	pageSize, err := getIntQueryParamValue(queryParameters, util.PagingQueryPageSize, 10, writer)
+	pageSize, err := getIntQueryParamValue(queryParameters, PagingQueryPageSize, 10, writer)
 	if err != nil {
-		return database.PageConfig{}, err
+		return service.PageConfig{}, err
 	}
 
-	sortKey := queryParameters.Get(util.PagingQuerySortKey)
+	sortKey := queryParameters.Get(PagingQuerySortKey)
 	if sortKey == "" {
 		sortKey = "id"
 	}
 
-	descending := queryParameters.Get(util.PagingQuerySortOrder) != util.PagingQuerySortOrderAscending
+	descending := queryParameters.Get(PagingQuerySortOrder) != PagingQuerySortOrderAscending
 
-	return database.PageConfig{
+	return service.PageConfig{
 		Descending: descending,
 		PageNumber: pageNumber,
 		PageSize:   pageSize,

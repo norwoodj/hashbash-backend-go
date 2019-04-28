@@ -5,53 +5,45 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
-	"github.com/jinzhu/gorm"
-	"github.com/norwoodj/hashbash-backend-go/pkg/database"
-	"github.com/norwoodj/hashbash-backend-go/pkg/model"
+	"github.com/norwoodj/hashbash-backend-go/pkg/service"
 )
 
-func AddRainbowTableRoutes(router *mux.Router, db *gorm.DB) {
+func AddRainbowTableRoutes(router *mux.Router, service service.RainbowTableService) {
 	router.
-		HandleFunc("/api/rainbow-table", getListRainbowTablesHandler(db)).
+		HandleFunc("/api/rainbow-table", getListRainbowTablesHandler(service)).
 		Methods("GET")
 
 	router.
-		HandleFunc("/api/rainbow-table/{id:[0-9]+}", getRainbowTableByIdHandler(db)).
+		HandleFunc("/api/rainbow-table/{id:[0-9]+}", getRainbowTableByIdHandler(service)).
 		Methods("GET")
 
 	router.
-		HandleFunc("/api/rainbow-table/count", getCountRainbowTablesHandler(db)).
+		HandleFunc("/api/rainbow-table/count", getCountRainbowTablesHandler(service)).
 		Methods("GET")
 }
 
-func getListRainbowTablesHandler(db *gorm.DB) func(writer http.ResponseWriter, request *http.Request) {
+func getListRainbowTablesHandler(service service.RainbowTableService) func(writer http.ResponseWriter, request *http.Request) {
 	return func(writer http.ResponseWriter, request *http.Request) {
 		pageConfig, err := getPageConfigFromRequest(writer, request)
 		if err != nil {
 			return
 		}
 
-		rainbowTables := make([]model.RainbowTable, 0)
-		database.ApplyPaging(db, pageConfig).
-			Find(&rainbowTables)
-
+		rainbowTables := service.ListRainbowTables(pageConfig)
 		json.
 			NewEncoder(writer).
 			Encode(rainbowTables)
 	}
 }
 
-func getRainbowTableByIdHandler(db *gorm.DB) func(writer http.ResponseWriter, request *http.Request) {
+func getRainbowTableByIdHandler(service service.RainbowTableService) func(writer http.ResponseWriter, request *http.Request) {
 	return func(writer http.ResponseWriter, request *http.Request) {
 		rainbowTableId, err := getIdPathParamValue(writer, request)
 		if err != nil {
 			return
 		}
 
-		var rainbowTable model.RainbowTable
-		db.
-			Where("id = ?", rainbowTableId).
-			First(&rainbowTable)
+		rainbowTable := service.FindRainbowTableById(rainbowTableId)
 
 		if rainbowTable.Name == "" {
 			writer.WriteHeader(404)
@@ -64,13 +56,9 @@ func getRainbowTableByIdHandler(db *gorm.DB) func(writer http.ResponseWriter, re
 	}
 }
 
-func getCountRainbowTablesHandler(db *gorm.DB) func(writer http.ResponseWriter, request *http.Request) {
+func getCountRainbowTablesHandler(service service.RainbowTableService) func(writer http.ResponseWriter, request *http.Request) {
 	return func(writer http.ResponseWriter, request *http.Request) {
-		var rainbowTableCount int64
-		db.
-			Model(&model.RainbowTable{}).
-			Count(&rainbowTableCount)
-
+		rainbowTableCount := service.CountRainbowTables()
 		json.
 			NewEncoder(writer).
 			Encode(map[string]int64{RainbowTableCountKey: rainbowTableCount})

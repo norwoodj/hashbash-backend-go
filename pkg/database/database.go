@@ -12,13 +12,6 @@ import (
 
 const dbName = "hashbash"
 
-type PageConfig struct {
-	Descending bool
-	PageNumber int
-	PageSize   int
-	SortKey    string
-}
-
 func AddDatabaseFlags(flags *pflag.FlagSet) {
 	flags.StringP("database-host", "d", "", "The hostname or IP address of the hashbash database")
 	flags.StringP("database-username", "u", "", "The username with which to authenticate to the database")
@@ -53,13 +46,19 @@ func GetConnectionOrDie() *gorm.DB {
 	return db
 }
 
-func ApplyPaging(db *gorm.DB, pageConfig PageConfig) *gorm.DB {
-	orderClause := pageConfig.SortKey
-	if pageConfig.Descending {
+func ApplyPaging(
+	db *gorm.DB,
+	limit int,
+	offset int,
+	orderColumn string,
+	descending bool,
+) *gorm.DB {
+	orderClause := orderColumn
+	if descending {
 		orderClause += " DESC"
 	}
 
-	return db.Limit(pageConfig.PageSize).
-		Offset(pageConfig.PageNumber * pageConfig.PageSize).
+	return db.Limit(limit).
+		Offset(offset).
 		Order(orderClause)
 }
