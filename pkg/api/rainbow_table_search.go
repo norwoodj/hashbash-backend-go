@@ -22,17 +22,14 @@ type RainbowTableSearchResultResponse struct {
 }
 
 func AddRainbowTableSearchRoutes(router *mux.Router, db *gorm.DB) {
-	// GET /api/rainbow-table/{id}/search
 	router.
 		HandleFunc("/api/rainbow-table/{id:[0-9]+}/search", getRainbowTableSearchesByIdHandler(db)).
 		Methods("GET")
 
-	// GET /api/rainbow-table/{id}/search/count
 	router.
 		HandleFunc("/api/rainbow-table/{id:[0-9]+}/search/count", getCountRainbowTableSearchesHandler(db)).
 		Methods("GET")
 
-	// GET /api/rainbow-table/{rainbowTableId}/searchResults
 	router.
 		HandleFunc("/api/rainbow-table/{id:[0-9]+}/searchResults", getRainbowTableSearchResultsHandler(db)).
 		Methods("GET")
@@ -76,7 +73,7 @@ func getCountRainbowTableSearchesHandler(db *gorm.DB) func(writer http.ResponseW
 
 		json.
 			NewEncoder(writer).
-			Encode(map[string]int64{"searchCount": rainbowTableSearchCount})
+			Encode(map[string]int64{RainbowTableSearchCountKey: rainbowTableSearchCount})
 	}
 }
 
@@ -91,14 +88,14 @@ func getRainbowTableSearchResultsHandler(db *gorm.DB) func(writer http.ResponseW
 		db.
 			Model(&model.RainbowTableSearch{}).
 			Select("status AS searchStatus, COUNT(*) AS count").
-			Where("rainbowTableId = ? and status IN (?)", rainbowTableId, []string{util.Found, util.NotFound}).
+			Where("rainbowTableId = ? and status IN (?)", rainbowTableId, []string{util.SearchFound, util.SearchNotFound}).
 			Group("searchStatus").
 			Scan(&searchResults)
 
 		var searchResultResponse RainbowTableSearchResultResponse
 
 		for _, result := range searchResults {
-			if result.SearchStatus == util.Found {
+			if result.SearchStatus == util.SearchFound {
 				searchResultResponse.FoundSearches += result.Count
 			}
 

@@ -17,5 +17,5 @@ type RainbowTableSearch struct {
 }
 
 func (RainbowTableSearch) TableName() string {
-	return "rainbow_table_search"
+	return RainbowTableSearchTableName
 }

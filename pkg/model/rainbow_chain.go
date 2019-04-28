@@ -7,5 +7,5 @@ type RainbowChain struct {
 }
 
 func (RainbowChain) TableName() string {
-	return "rainbow_chain"
+	return RainbowChainTableName
 }

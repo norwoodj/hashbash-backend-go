@@ -20,5 +20,5 @@ type RainbowTable struct {
 }
 
 func (RainbowTable) TableName() string {
-	return "rainbow_table"
+	return RainbowTableTableName
 }
