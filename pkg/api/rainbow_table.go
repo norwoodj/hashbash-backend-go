@@ -30,6 +30,7 @@ func getListRainbowTablesHandler(service service.RainbowTableService) func(write
 		}
 
 		rainbowTables := service.ListRainbowTables(pageConfig)
+		writer.Header().Set("Content-Type", "application/json")
 		json.
 			NewEncoder(writer).
 			Encode(rainbowTables)
@@ -50,6 +51,7 @@ func getRainbowTableByIdHandler(service service.RainbowTableService) func(writer
 			return
 		}
 
+		writer.Header().Set("Content-Type", "application/json")
 		json.
 			NewEncoder(writer).
 			Encode(rainbowTable)
@@ -59,6 +61,7 @@ func getRainbowTableByIdHandler(service service.RainbowTableService) func(writer
 func getCountRainbowTablesHandler(service service.RainbowTableService) func(writer http.ResponseWriter, request *http.Request) {
 	return func(writer http.ResponseWriter, request *http.Request) {
 		rainbowTableCount := service.CountRainbowTables()
+		writer.Header().Set("Content-Type", "application/json")
 		json.
 			NewEncoder(writer).
 			Encode(map[string]int64{RainbowTableCountKey: rainbowTableCount})

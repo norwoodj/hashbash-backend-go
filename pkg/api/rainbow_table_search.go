@@ -36,6 +36,7 @@ func getRainbowTableSearchesByIdHandler(service service.RainbowTableSearchServic
 
 		includeNotFound := getIncludeNotFoundQueryParam(request.URL.Query())
 		rainbowTableSearches := service.ListRainbowTableSearches(rainbowTableId, includeNotFound, pageConfig)
+		writer.Header().Set("Content-Type", "application/json")
 		json.
 			NewEncoder(writer).
 			Encode(rainbowTableSearches)
@@ -51,6 +52,7 @@ func getCountRainbowTableSearchesHandler(service service.RainbowTableSearchServi
 
 		includeNotFound := getIncludeNotFoundQueryParam(request.URL.Query())
 		rainbowTableSearchCount := service.CountRainbowTableSearches(rainbowTableId, includeNotFound)
+		writer.Header().Set("Content-Type", "application/json")
 		json.
 			NewEncoder(writer).
 			Encode(map[string]int64{RainbowTableSearchCountKey: rainbowTableSearchCount})
@@ -65,6 +67,7 @@ func getRainbowTableSearchResultsHandler(service service.RainbowTableSearchServi
 		}
 
 		searchResultResponse := service.GetRainbowTableSearchResults(rainbowTableId)
+		writer.Header().Set("Content-Type", "application/json")
 		json.
 			NewEncoder(writer).
 			Encode(searchResultResponse)

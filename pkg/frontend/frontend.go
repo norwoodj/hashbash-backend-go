@@ -5,6 +5,7 @@ import (
 	"html/template"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"path"
 	"regexp"
 	"strings"
@@ -87,7 +88,7 @@ func RegisterTemplateHandler(router *mux.Router, frontendDirPath string) error {
 			rainbowTableId := queryParams.Get("rainbowTableId")
 
 			if rainbowTableId == "" {
-				http.Redirect(writer, request, fmt.Sprintf("/rainbow-tables?error=%s", rainbowTableIdQueryParamRequired), 303)
+				http.Redirect(writer, request, fmt.Sprintf("/rainbow-tables?error=%s", url.PathEscape(rainbowTableIdQueryParamRequired)), 303)
 				return
 			}
 		}
