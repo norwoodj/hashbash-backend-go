@@ -1,17 +1,33 @@
 package mq
 
-import "github.com/streadway/amqp"
+import (
+	"github.com/norwoodj/hashbash-backend-go/pkg/rabbit"
+	"github.com/streadway/amqp"
+)
 
 type HashbashMqProducers struct {
-	DeleteRainbowTableProducer   *BaseMqProducer
-	GenerateRainbowTableProducer *BaseMqProducer
-	SearchRainbowTableProducer   *BaseMqProducer
+	DeleteRainbowTableProducer   *rabbit.Producer
+	GenerateRainbowTableProducer *rabbit.Producer
+	SearchRainbowTableProducer   *rabbit.Producer
 }
 
-func CreateProducers(connection *amqp.Connection) (HashbashMqProducers, error) {
-	deleteRainbowTableProducer, err1 := NewMqProducer(connection, taskExchangeName, "topic", deleteRainbowTableRoutingKey)
-	generateRainbowTableProducer, err0 := NewMqProducer(connection, taskExchangeName, "topic", generateRainbowTableRoutingKey)
-	searchRainbowTableProducer, err2 := NewMqProducer(connection, taskExchangeName, "topic", searchRainbowTableRoutingKey)
+func newProducer(connection *rabbit.ServerConnection, routingKey string) (*rabbit.Producer, error) {
+	serializer := rabbit.JsonMessageSerializer{}
+	return rabbit.NewProducer(
+		connection,
+		serializer,
+		taskExchangeName,
+		amqp.ExchangeTopic,
+		routingKey,
+		true,
+	)
+
+}
+
+func CreateProducers(connection *rabbit.ServerConnection) (HashbashMqProducers, error) {
+	deleteRainbowTableProducer, err0 := newProducer(connection, deleteRainbowTableRoutingKey)
+	generateRainbowTableProducer, err1 := newProducer(connection, generateRainbowTableRoutingKey)
+	searchRainbowTableProducer, err2 := newProducer(connection, searchRainbowTableRoutingKey)
 
 	for _, e := range []error{err0, err1, err2} {
 		if e != nil {
@@ -19,8 +35,8 @@ func CreateProducers(connection *amqp.Connection) (HashbashMqProducers, error) {
 		}
 	}
 	return HashbashMqProducers{
-		DeleteRainbowTableProducer:   &deleteRainbowTableProducer,
-		GenerateRainbowTableProducer: &generateRainbowTableProducer,
-		SearchRainbowTableProducer:   &searchRainbowTableProducer,
+		DeleteRainbowTableProducer:   deleteRainbowTableProducer,
+		GenerateRainbowTableProducer: generateRainbowTableProducer,
+		SearchRainbowTableProducer:   searchRainbowTableProducer,
 	}, nil
 }

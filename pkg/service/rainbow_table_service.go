@@ -1,9 +1,29 @@
 package service
 
 import (
+	"fmt"
 	"github.com/jinzhu/gorm"
 	"github.com/norwoodj/hashbash-backend-go/pkg/model"
 )
+
+type RainbowTableExistsError struct {
+	Name string
+}
+
+func (err RainbowTableExistsError) Error() string {
+	return fmt.Sprintf("Rainbow table with name %s already exists!", err.Name)
+}
+
+func IsRainbowTableExistsError(err error) bool {
+	if err != nil {
+		switch err.(type) {
+		case RainbowTableExistsError:
+			return true
+		}
+	}
+
+	return false
+}
 
 type RainbowTableService interface {
 	CountRainbowTables() int64
@@ -21,14 +41,11 @@ func NewRainbowTableService(db *gorm.DB) RainbowTableService {
 	return MySQLRainbowTableService{databaseClient: db}
 }
 
-struct RainbowTableExistsError {
-
-}
-
 func (service MySQLRainbowTableService) CreateRainbowTable(rainbowTable *model.RainbowTable) (*model.RainbowTable, error) {
 	if service.FindRainbowTableByName(rainbowTable.Name).Name != "" {
-		return
+		return nil, RainbowTableExistsError{Name: rainbowTable.Name}
 	}
+
 	err := service.databaseClient.
 		Save(rainbowTable).
 		Error

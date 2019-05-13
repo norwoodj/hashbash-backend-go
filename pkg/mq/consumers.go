@@ -1,45 +1,16 @@
 package mq
 
 import (
-	"github.com/streadway/amqp"
+	"github.com/norwoodj/hashbash-backend-go/pkg/rabbit"
 )
 
-type SearchRainbowTableConsumer struct {
-	BaseMqConsumerWorker
-}
-
 type HashbashMqConsumerWorkers struct {
-	HashbashDeleteRainbowTableConsumer   *BaseMqConsumerWorker
-	HashbashGenerateRainbowTableConsumer *BaseMqConsumerWorker
-	HashbashSearchRainbowTableConsumer   *BaseMqConsumerWorker
+	HashbashDeleteRainbowTableConsumer   *rabbit.Consumer
+	HashbashGenerateRainbowTableConsumer *rabbit.Consumer
+	HashbashSearchRainbowTableConsumer   *rabbit.Consumer
 }
 
-func newBaseMqConsumer(
-	worker ConsumerWorker,
-	connection *amqp.Connection,
-	exchangeName string,
-	exchangeType string,
-	routingKey string,
-) (*BaseMqConsumerWorker, error) {
-	baseConsumer := BaseMqConsumerWorker{
-		BaseMqClient: BaseMqClient{
-			exchangeName: exchangeName,
-			exchangeType: exchangeType,
-			routingKey:   routingKey,
-		},
-		worker: worker,
-	}
-
-	err := baseConsumer.createConsumer(connection)
-	if err != nil {
-		return nil, err
-	}
-
-	err = baseConsumer.declareRoutingTopology()
-	return &baseConsumer, err
-}
-
-func CreateConsumerWorkers(connection *amqp.Connection) (HashbashMqConsumerWorkers, error) {
+func CreateConsumerWorkers(connection *rabbit.ServerConnection) (HashbashMqConsumerWorkers, error) {
 	deleteRainbowTableConsumer, err0 := NewDeleteRainbowTableConsumer(connection)
 	generateRainbowTableConsumer, err1 := NewGenerateRainbowTableConsumer(connection)
 	searchRainbowTableConsumer, err2 := NewSearchRainbowTableConsumer(connection)

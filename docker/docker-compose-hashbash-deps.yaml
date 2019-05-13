@@ -23,7 +23,7 @@ services:
 
   nginx:
     image: jnorwood/hashbash-nginx:release-20190425-1647
-    #extra_hosts:
-    #  - hashbash-webapp:${HASHBASH_HOST_IP_ADDRESS}
+    extra_hosts:
+      - hashbash-webapp:${HASHBASH_HOST_IP_ADDRESS}
     ports:
       - 80:80

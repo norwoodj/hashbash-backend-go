@@ -1,13 +1,12 @@
 package mq
 
 import (
-	"fmt"
+	"github.com/norwoodj/hashbash-backend-go/pkg/rabbit"
 	"os"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
-	"github.com/streadway/amqp"
 )
 
 const taskExchangeName = "task"
@@ -15,20 +14,6 @@ const generateRainbowTableRoutingKey = "generateRainbowTable"
 const deleteRainbowTableRoutingKey = "deleteRainbowTable"
 const searchRainbowTableRoutingKey = "searchRainbowTable"
 
-func formatRabbitMqDsn(
-	hostname string,
-	username string,
-	password string,
-	port int,
-) string {
-	return fmt.Sprintf(
-		"amqp://%s:%s@%s:%d/",
-		username,
-		password,
-		hostname,
-		port,
-	)
-}
 
 func AddRabbitMqFlags(flags *pflag.FlagSet) {
 	flags.StringP("rabbitmq-host", "r", "localhost", "The hostname or IP address of the hashbash rabbitmq server")
@@ -37,33 +22,14 @@ func AddRabbitMqFlags(flags *pflag.FlagSet) {
 	flags.IntP("rabbitmq-port", "m", 5672, "The port on which to connect to the hashbash rabbitmq server")
 }
 
-func AcquireMqConnection() (*amqp.Connection, error) {
-	censoredRabbitDsn := formatRabbitMqDsn(
-		viper.GetString("rabbitmq-host"),
-		viper.GetString("rabbitmq-username"),
-		"********",
-		viper.GetInt("rabbitmq-port"),
-	)
-
-	log.Infof("Connecting to RabbitMQ server %s", censoredRabbitDsn)
-
-	rabbitDsn := formatRabbitMqDsn(
-		viper.GetString("rabbitmq-host"),
+func AcquireMqConnectionOrDie() *rabbit.ServerConnection {
+	rabbitConfig := rabbit.NewConfig(
+		viper.GetString("rabbitmq-hostname"),
 		viper.GetString("rabbitmq-username"),
 		viper.GetString("rabbitmq-password"),
-		viper.GetInt("rabbitmq-port"),
 	)
 
-	conn, err := amqp.Dial(rabbitDsn)
-	if err != nil {
-		return nil, err
-	}
-
-	return conn, nil
-}
-
-func AcquireMqConnectionOrDie() *amqp.Connection {
-	connection, err := AcquireMqConnection()
+	connection, err := rabbit.NewServerConnection(rabbitConfig)
 
 	if err != nil {
 		log.Errorf("Failed to create rabbitmq connection: %s", err)

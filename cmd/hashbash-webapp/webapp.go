@@ -91,13 +91,8 @@ func hashbashWebapp(_ *cobra.Command, _ []string) {
 	rainbowTableService := service.NewRainbowTableService(db)
 	rainbowTableSearchService := service.NewRainbowTableSearchService(db)
 
-	connection, err := mq.AcquireMqConnection()
+	connection := mq.AcquireMqConnectionOrDie()
 	defer connection.Close()
-
-	if err != nil {
-		log.Errorf("Failed to create rabbitmq connection: %s", err)
-		os.Exit(1)
-	}
 
 	hashbashProducers, err := mq.CreateProducers(connection)
 	if err != nil {

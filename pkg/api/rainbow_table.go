@@ -230,6 +230,13 @@ func getGenerateRainbowTableJsonHandler(
 		)
 
 		if err != nil {
+			if service.IsRainbowTableExistsError(err) {
+				writer.WriteHeader(http.StatusBadRequest)
+				json.NewEncoder(writer).
+					Encode(map[string]string{"error": err.Error()})
+				return
+			}
+
 			log.Errorf("Failed to publish generateRainbowTable request: %s", err)
 			writer.WriteHeader(http.StatusInternalServerError)
 			return
