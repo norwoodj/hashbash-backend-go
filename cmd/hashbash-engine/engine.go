@@ -12,7 +12,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-func startConsumersAndHandleSignals(consumers mq.HashbashMqConsumers, shutdownGraceDuration time.Duration) {
+func startConsumersAndHandleSignals(consumers mq.HashbashMqConsumerWorkers, shutdownGraceDuration time.Duration) {
 	consumerStartErrorChannels := []chan error{make(chan error), make(chan error), make(chan error)}
 	quit := make(chan bool)
 
@@ -49,15 +49,10 @@ func hashbashEngine(_ *cobra.Command, _ []string) {
 	//rainbowTableService := service.NewRainbowTableService(db)
 	//rainbowTableSearchService := service.NewRainbowTableSearchService(db)
 
-	connection, err := mq.AcquireMqConnection()
+	connection := mq.AcquireMqConnectionOrDie()
 	defer connection.Close()
 
-	if err != nil {
-		log.Errorf("Failed to create rabbitmq connection: %s", err)
-		os.Exit(1)
-	}
-
-	hashbashConsumers, err := mq.CreateConsumers(connection)
+	hashbashConsumers, err := mq.CreateConsumerWorkers(connection)
 	if err != nil {
 		log.Errorf("Failed to instantiate rabbitmq consumers: %s", err)
 		os.Exit(1)

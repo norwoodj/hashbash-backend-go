@@ -5,55 +5,52 @@ import (
 )
 
 type SearchRainbowTableConsumer struct {
-	BaseMqConsumer
+	BaseMqConsumerWorker
 }
 
-type HashbashMqConsumers struct {
-	HashbashDeleteRainbowTableConsumer   MqConsumerWorker
-	HashbashGenerateRainbowTableConsumer MqConsumerWorker
-	HashbashSearchRainbowTableConsumer   MqConsumerWorker
+type HashbashMqConsumerWorkers struct {
+	HashbashDeleteRainbowTableConsumer   Consumer
+	HashbashGenerateRainbowTableConsumer Consumer
+	HashbashSearchRainbowTableConsumer   Consumer
 }
 
 func newBaseMqConsumer(
+	worker ConsumerWorker,
 	connection *amqp.Connection,
 	exchangeName string,
 	exchangeType string,
 	routingKey string,
-) (BaseMqConsumer, error) {
-	baseConsumer := BaseMqConsumer{
-		BaseMqClient{
+) (*BaseMqConsumerWorker, error) {
+	baseConsumer := BaseMqConsumerWorker{
+		BaseMqClient: BaseMqClient{
 			exchangeName: exchangeName,
 			exchangeType: exchangeType,
 			routingKey:   routingKey,
 		},
+		worker: worker,
 	}
 
 	err := baseConsumer.createConsumer(connection)
 	if err != nil {
-		return BaseMqConsumer{}, err
+		return nil, err
 	}
 
 	err = baseConsumer.declareRoutingTopology()
-	return baseConsumer, err
+	return &baseConsumer, err
 }
 
-func NewSearchRainbowTableConsumer(connection *amqp.Connection) (MqConsumerWorker, error) {
-	baseConsumer, err := newBaseMqConsumer(connection, taskExchangeName, "topic", searchRainbowTableRoutingKey)
-	return &SearchRainbowTableConsumer{baseConsumer}, err
-}
-
-func CreateConsumers(connection *amqp.Connection) (HashbashMqConsumers, error) {
+func CreateConsumerWorkers(connection *amqp.Connection) (HashbashMqConsumerWorkers, error) {
 	deleteRainbowTableConsumer, err0 := NewDeleteRainbowTableConsumer(connection)
 	generateRainbowTableConsumer, err1 := NewGenerateRainbowTableConsumer(connection)
 	searchRainbowTableConsumer, err2 := NewSearchRainbowTableConsumer(connection)
 
 	for _, e := range []error{err0, err1, err2} {
 		if e != nil {
-			return HashbashMqConsumers{}, e
+			return HashbashMqConsumerWorkers{}, e
 		}
 	}
 
-	return HashbashMqConsumers{
+	return HashbashMqConsumerWorkers{
 		HashbashDeleteRainbowTableConsumer:   deleteRainbowTableConsumer,
 		HashbashGenerateRainbowTableConsumer: generateRainbowTableConsumer,
 		HashbashSearchRainbowTableConsumer:   searchRainbowTableConsumer,

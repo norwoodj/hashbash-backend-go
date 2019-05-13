@@ -7,25 +7,28 @@ import (
 	"github.com/streadway/amqp"
 )
 
-type MqConsumerWorker interface {
+type Consumer interface {
 	ConsumeMessages(chan bool, chan error)
-
 	createConsumer(*amqp.Connection) error
 	declareRoutingTopology() error
+}
+
+type ConsumerWorker interface {
 	handleMessage(*amqp.Delivery) error
 }
 
-type BaseMqConsumer struct {
+type BaseMqConsumerWorker struct {
 	BaseMqClient
+	worker ConsumerWorker
 }
 
-func (consumer *BaseMqConsumer) createConsumer(rabbitmqConnection *amqp.Connection) error {
+func (consumer *BaseMqConsumerWorker) createConsumer(rabbitmqConnection *amqp.Connection) error {
 	var err error
 	consumer.channel, err = rabbitmqConnection.Channel()
 	return err
 }
 
-func (consumer *BaseMqConsumer) ConsumeMessages(quit chan bool, startErrorChannel chan error) {
+func (consumer *BaseMqConsumerWorker) ConsumeMessages(quit chan bool, startErrorChannel chan error) {
 	queueName := consumer.getQueueName()
 	err := consumer.channel.Qos(1, 0, false)
 
@@ -51,7 +54,7 @@ func (consumer *BaseMqConsumer) ConsumeMessages(quit chan bool, startErrorChanne
 
 	go func() {
 		for msg := range msgPipe {
-			err := consumer.handleMessage(&msg)
+			err := consumer.worker.handleMessage(&msg)
 			if err != nil {
 				log.Warnf("Failed to handle message: %s", err)
 				continue
@@ -73,9 +76,4 @@ func (consumer *BaseMqConsumer) ConsumeMessages(quit chan bool, startErrorChanne
 	if err != nil {
 		log.Errorf("Error closing channel for %s consumer: %s", queueName, err)
 	}
-}
-
-func (consumer *BaseMqConsumer) handleMessage(message *amqp.Delivery) error {
-	log.Infof("BaseConsumer got message: %+v", message)
-	return nil
 }

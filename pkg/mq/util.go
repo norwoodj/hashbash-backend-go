@@ -2,6 +2,7 @@ package mq
 
 import (
 	"fmt"
+	"os"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/pflag"
@@ -59,4 +60,15 @@ func AcquireMqConnection() (*amqp.Connection, error) {
 	}
 
 	return conn, nil
+}
+
+func AcquireMqConnectionOrDie() *amqp.Connection {
+	connection, err := AcquireMqConnection()
+
+	if err != nil {
+		log.Errorf("Failed to create rabbitmq connection: %s", err)
+		os.Exit(1)
+	}
+
+	return connection
 }
