@@ -10,6 +10,7 @@ type RainbowTableService interface {
 	CreateRainbowTable(*model.RainbowTable) (*model.RainbowTable, error)
 	ListRainbowTables(PageConfig) []model.RainbowTable
 	FindRainbowTableById(int16) model.RainbowTable
+	FindRainbowTableByName(string) model.RainbowTable
 }
 
 type MySQLRainbowTableService struct {
@@ -20,7 +21,14 @@ func NewRainbowTableService(db *gorm.DB) RainbowTableService {
 	return MySQLRainbowTableService{databaseClient: db}
 }
 
+struct RainbowTableExistsError {
+
+}
+
 func (service MySQLRainbowTableService) CreateRainbowTable(rainbowTable *model.RainbowTable) (*model.RainbowTable, error) {
+	if service.FindRainbowTableByName(rainbowTable.Name).Name != "" {
+		return
+	}
 	err := service.databaseClient.
 		Save(rainbowTable).
 		Error
@@ -50,6 +58,15 @@ func (service MySQLRainbowTableService) FindRainbowTableById(rainbowTableId int1
 	var rainbowTable model.RainbowTable
 	service.databaseClient.
 		Where("id = ?", rainbowTableId).
+		First(&rainbowTable)
+
+	return rainbowTable
+}
+
+func (service MySQLRainbowTableService) FindRainbowTableByName(name string) model.RainbowTable {
+	var rainbowTable model.RainbowTable
+	service.databaseClient.
+		Where("name = ?", name).
 		First(&rainbowTable)
 
 	return rainbowTable

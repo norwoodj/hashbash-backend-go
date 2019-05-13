@@ -7,12 +7,6 @@ import (
 	"github.com/streadway/amqp"
 )
 
-type Consumer interface {
-	ConsumeMessages(chan bool, chan error)
-	createConsumer(*amqp.Connection) error
-	declareRoutingTopology() error
-}
-
 type ConsumerWorker interface {
 	handleMessage(*amqp.Delivery) error
 }

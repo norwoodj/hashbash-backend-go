@@ -12,7 +12,7 @@ func (worker *GenerateRainbowTableWorker) handleMessage(message *amqp.Delivery) 
 	return nil
 }
 
-func NewGenerateRainbowTableConsumer(connection *amqp.Connection) (Consumer, error) {
+func NewGenerateRainbowTableConsumer(connection *amqp.Connection) (*BaseMqConsumerWorker, error) {
 	consumerWorker := &GenerateRainbowTableWorker{}
 	return newBaseMqConsumer(consumerWorker, connection, taskExchangeName, "topic", generateRainbowTableRoutingKey)
 }

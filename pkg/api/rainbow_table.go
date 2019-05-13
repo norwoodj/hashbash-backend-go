@@ -24,7 +24,7 @@ const rainbowTableDefaultPasswordLength = 8
 
 type GenerateRainbowTableRequest struct {
 	Name           string `json:"name,required"schema:"name,required"`
-	ChainLength    int64  `json:"chainLength,required"schema:"chainLength"`
+	ChainLength    int64  `json:"chainLength"schema:"chainLength"`
 	Charset        string `json:"charset"schema:"charset"`
 	HashFunction   string `json:"hashFunction"schema:"hashFunction"`
 	NumChains      int64  `json:"numChains"schema:"numChains"`

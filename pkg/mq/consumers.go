@@ -9,9 +9,9 @@ type SearchRainbowTableConsumer struct {
 }
 
 type HashbashMqConsumerWorkers struct {
-	HashbashDeleteRainbowTableConsumer   Consumer
-	HashbashGenerateRainbowTableConsumer Consumer
-	HashbashSearchRainbowTableConsumer   Consumer
+	HashbashDeleteRainbowTableConsumer   *BaseMqConsumerWorker
+	HashbashGenerateRainbowTableConsumer *BaseMqConsumerWorker
+	HashbashSearchRainbowTableConsumer   *BaseMqConsumerWorker
 }
 
 func newBaseMqConsumer(
