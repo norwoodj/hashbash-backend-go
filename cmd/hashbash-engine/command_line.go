@@ -18,7 +18,7 @@ func newRootCommand() *cobra.Command {
 	}
 
 	engineFlags := rootCmd.PersistentFlags()
-	engineFlags.DurationP("shutdown-timeout", "s", time.Second*15, "The duration for which the server waits for existing connections to finish, e.g. 15s or 1m")
+	engineFlags.DurationP("shutdown-timeout", "s", time.Second*3, "The duration for which the server waits for existing connections to finish, e.g. 15s or 1m")
 
 	util.AddDefaultFlags(engineFlags)
 	database.AddDatabaseFlags(engineFlags)

@@ -10,9 +10,9 @@ import (
 )
 
 const taskExchangeName = "task"
-const generateRainbowTableQueueName = "generateRainbowTable"
-const deleteRainbowTableQueueName = "deleteRainbowTable"
-const searchRainbowTableQueueName = "searchRainbowTable"
+const generateRainbowTableRoutingKey = "generateRainbowTable"
+const deleteRainbowTableRoutingKey = "deleteRainbowTable"
+const searchRainbowTableRoutingKey = "searchRainbowTable"
 
 func formatRabbitMqDsn(
 	hostname string,

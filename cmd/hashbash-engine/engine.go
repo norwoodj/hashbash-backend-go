@@ -13,12 +13,22 @@ import (
 )
 
 func startConsumersAndHandleSignals(consumers mq.HashbashMqConsumers, shutdownGraceDuration time.Duration) {
+	consumerStartErrorChannels := []chan error{make(chan error), make(chan error), make(chan error)}
 	quit := make(chan bool)
 
 	log.Infof("Starting hashbash consumers...")
-	go consumers.DeleteRainbowTableConsumer.ConsumeMessages(quit)
-	go consumers.GenerateRainbowTableConsumer.ConsumeMessages(quit)
-	go consumers.SearchRainbowTableConsumer.ConsumeMessages(quit)
+	go consumers.HashbashDeleteRainbowTableConsumer.ConsumeMessages(quit, consumerStartErrorChannels[0])
+	go consumers.HashbashGenerateRainbowTableConsumer.ConsumeMessages(quit, consumerStartErrorChannels[1])
+	go consumers.HashbashSearchRainbowTableConsumer.ConsumeMessages(quit, consumerStartErrorChannels[2])
+
+	for _, errorChannel := range consumerStartErrorChannels {
+		consumerStartError := <-errorChannel
+
+		if consumerStartError != nil {
+			log.Error(consumerStartError)
+			os.Exit(1)
+		}
+	}
 
 	gracefulStop := make(chan os.Signal, 1)
 	signal.Notify(gracefulStop, syscall.SIGTERM)

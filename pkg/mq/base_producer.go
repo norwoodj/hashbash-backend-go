@@ -23,10 +23,10 @@ func NewMqProducer(
 
 	producer := BaseMqProducer{
 		BaseMqClient{
-			Channel:      channel,
-			ExchangeName: exchangeName,
-			ExchangeType: exchangeType,
-			RoutingKey:   routingKey,
+			channel:      channel,
+			exchangeName: exchangeName,
+			exchangeType: exchangeType,
+			routingKey:   routingKey,
 		},
 	}
 
@@ -44,9 +44,9 @@ func (producer BaseMqProducer) PublishMessage(msg RainbowTableMessage) error {
 		return fmt.Errorf("failed to serialize message for publishing: %s", err)
 	}
 
-	return producer.Channel.Publish(
-		producer.ExchangeName,
-		producer.RoutingKey,
+	return producer.channel.Publish(
+		producer.exchangeName,
+		producer.routingKey,
 		false,
 		false,
 		amqp.Publishing{ContentType: "application/json", Body: []byte(serializedMsg)},

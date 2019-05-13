@@ -10,27 +10,27 @@ const deadLetterExchangeName = "DLX"
 const deadLetterExchangeType = "direct"
 
 type BaseMqClient struct {
-	Channel      *amqp.Channel
-	ExchangeName string
-	ExchangeType string
-	RoutingKey   string
+	channel      *amqp.Channel
+	exchangeName string
+	exchangeType string
+	routingKey   string
 }
 
 func (client BaseMqClient) getDeadLetterQueueName() string {
-	return fmt.Sprintf("%s.%s.dlq", client.ExchangeName, client.RoutingKey)
+	return fmt.Sprintf("%s.%s.dlq", client.exchangeName, client.routingKey)
 }
 
 func (client BaseMqClient) getDeadLetterRoutingKey() string {
-	return fmt.Sprintf("%s.%s", client.ExchangeName, client.RoutingKey)
+	return fmt.Sprintf("%s.%s", client.exchangeName, client.routingKey)
 }
 
 func (client BaseMqClient) getQueueName() string {
-	return fmt.Sprintf("%s.%s", client.ExchangeName, client.RoutingKey)
+	return fmt.Sprintf("%s.%s", client.exchangeName, client.routingKey)
 }
 
 func (client BaseMqClient) declareDeadLetterRouting() error {
 	log.Infof("Declaring rabbitmq dead letter exchange %s", deadLetterExchangeName)
-	err := client.Channel.ExchangeDeclare(
+	err := client.channel.ExchangeDeclare(
 		deadLetterExchangeName,
 		deadLetterExchangeType,
 		true,
@@ -46,7 +46,7 @@ func (client BaseMqClient) declareDeadLetterRouting() error {
 
 	deadLetterQueueName := client.getDeadLetterQueueName()
 	log.Infof("Declaring rabbitmq dead letter queue %s", deadLetterQueueName)
-	_, err = client.Channel.QueueDeclare(
+	_, err = client.channel.QueueDeclare(
 		deadLetterQueueName,
 		true,
 		false,
@@ -61,7 +61,7 @@ func (client BaseMqClient) declareDeadLetterRouting() error {
 
 	deadLetterRoutingKey := client.getDeadLetterRoutingKey()
 	log.Infof("Binding rabbitmq dead letter queue %s to exchange %s on routing key %s", deadLetterQueueName, deadLetterExchangeName, deadLetterRoutingKey)
-	return client.Channel.QueueBind(
+	return client.channel.QueueBind(
 		deadLetterQueueName,
 		deadLetterRoutingKey,
 		deadLetterExchangeName,
@@ -71,10 +71,10 @@ func (client BaseMqClient) declareDeadLetterRouting() error {
 }
 
 func (client BaseMqClient) declareQueueRouting() error {
-	log.Infof("Declaring %s rabbitmq exchange %s", client.ExchangeType, client.ExchangeName)
-	err := client.Channel.ExchangeDeclare(
-		client.ExchangeName,
-		client.ExchangeType,
+	log.Infof("Declaring %s rabbitmq exchange %s", client.exchangeType, client.exchangeName)
+	err := client.channel.ExchangeDeclare(
+		client.exchangeName,
+		client.exchangeType,
 		true,
 		false,
 		false,
@@ -93,7 +93,7 @@ func (client BaseMqClient) declareQueueRouting() error {
 		"x-dead-letter-routing-key": queueName,
 	}
 
-	_, err = client.Channel.QueueDeclare(
+	_, err = client.channel.QueueDeclare(
 		queueName,
 		true,
 		false,
@@ -106,11 +106,11 @@ func (client BaseMqClient) declareQueueRouting() error {
 		return err
 	}
 
-	log.Infof("Binding rabbitmq queue %s to exchange %s on routing key %s", queueName, client.ExchangeName, client.RoutingKey)
-	return client.Channel.QueueBind(
+	log.Infof("Binding rabbitmq queue %s to exchange %s on routing key %s", queueName, client.exchangeName, client.routingKey)
+	return client.channel.QueueBind(
 		queueName,
-		client.RoutingKey,
-		client.ExchangeName,
+		client.routingKey,
+		client.exchangeName,
 		false,
 		nil,
 	)

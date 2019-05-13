@@ -6,6 +6,7 @@ import (
 	"github.com/norwoodj/hashbash-backend-go/pkg/model"
 	"github.com/norwoodj/hashbash-backend-go/pkg/mq"
 	"github.com/norwoodj/hashbash-backend-go/pkg/util"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 
@@ -22,12 +23,12 @@ const rainbowTableDefaultHashFunction = "MD5"
 const rainbowTableDefaultPasswordLength = 8
 
 type GenerateRainbowTableRequest struct {
-	Name           string `schema:"name,required"`
-	ChainLength    int64  `schema:"chainLength"`
-	Charset        string `schema:"charset"`
-	HashFunction   string `schema:"hashFunction"`
-	NumChains      int64  `schema:"numChains"`
-	PasswordLength int64  `schema:"passwordLength"`
+	Name           string `json:"name,required"schema:"name,required"`
+	ChainLength    int64  `json:"chainLength,required"schema:"chainLength"`
+	Charset        string `json:"charset"schema:"charset"`
+	HashFunction   string `json:"hashFunction"schema:"hashFunction"`
+	NumChains      int64  `json:"numChains"schema:"numChains"`
+	PasswordLength int64  `json:"passwordLength"schema:"passwordLength"`
 }
 
 func rainbowTableFromRequest(generateRequest GenerateRainbowTableRequest) model.RainbowTable {
@@ -56,7 +57,13 @@ func AddRainbowTableRoutes(router *mux.Router, service service.RainbowTableServi
 		Methods("GET")
 
 	router.
-		HandleFunc("/api/rainbow-table", getGenerateRainbowTableHandler(service, producers)).
+		HandleFunc("/api/rainbow-table", getGenerateRainbowTableFormHandler(service, producers)).
+		Headers("Content-Type", "application/x-www-form-urlencoded").
+		Methods("POST")
+
+	router.
+		HandleFunc("/api/rainbow-table", getGenerateRainbowTableJsonHandler(service, producers)).
+		Headers("Content-Type", "application/json").
 		Methods("POST")
 }
 
@@ -106,7 +113,26 @@ func getCountRainbowTablesHandler(rainbowTableService service.RainbowTableServic
 	}
 }
 
-func getGenerateRainbowTableHandler(
+func handleGenerateRainbowTable(
+	rainbowTableService service.RainbowTableService,
+	hashbashMqProducers mq.HashbashMqProducers,
+	generateRequest GenerateRainbowTableRequest,
+) (model.RainbowTable, error) {
+	rainbowTable := rainbowTableFromRequest(generateRequest)
+	_, err := rainbowTableService.CreateRainbowTable(&rainbowTable)
+
+	if err != nil {
+		return rainbowTable, err
+	}
+
+	log.Infof("Created rainbow table %s with id %d. Publishing request for generation...", rainbowTable.Name, rainbowTable.ID)
+	err = hashbashMqProducers.GenerateRainbowTableProducer.
+		PublishMessage(mq.RainbowTableMessage{RainbowTableId: rainbowTable.ID})
+
+	return rainbowTable, err
+}
+
+func getGenerateRainbowTableFormHandler(
 	rainbowTableService service.RainbowTableService,
 	hashbashMqProducers mq.HashbashMqProducers,
 ) func(writer http.ResponseWriter, request *http.Request) {
@@ -136,14 +162,15 @@ func getGenerateRainbowTableHandler(
 				fmt.Sprintf("/rainbow-tables?error=%s", url.PathEscape(err.Error())),
 				http.StatusTemporaryRedirect,
 			)
+
+			return
 		}
 
-		rainbowTable := rainbowTableFromRequest(generateRequest)
-		rainbowTableService.CreateRainbowTable(&rainbowTable)
-		log.Infof("Created rainbow table %s with id %d. Publishing request for generation...", rainbowTable.Name, rainbowTable.ID)
-
-		err = hashbashMqProducers.GenerateRainbowTableProducer.
-			PublishMessage(mq.RainbowTableMessage{RainbowTableId: rainbowTable.ID})
+		_, err = handleGenerateRainbowTable(
+			rainbowTableService,
+			hashbashMqProducers,
+			generateRequest,
+		)
 
 		if err != nil {
 			log.Errorf("Failed to publish generateRainbowTable request: %s", err)
@@ -153,6 +180,8 @@ func getGenerateRainbowTableHandler(
 				fmt.Sprintf("/rainbow-tables?error=%s", url.PathEscape(err.Error())),
 				http.StatusTemporaryRedirect,
 			)
+
+			return
 		}
 
 		http.Redirect(
@@ -161,5 +190,53 @@ func getGenerateRainbowTableHandler(
 			"/rainbow-tables",
 			http.StatusTemporaryRedirect,
 		)
+	}
+}
+
+func getGenerateRainbowTableJsonHandler(
+	rainbowTableService service.RainbowTableService,
+	hashbashMqProducers mq.HashbashMqProducers,
+) func(writer http.ResponseWriter, request *http.Request) {
+	return func(writer http.ResponseWriter, request *http.Request) {
+		requestBody, err := ioutil.ReadAll(request.Body)
+		log.Debugf("Received rainbow table generate request: %s", string(requestBody))
+
+		if err != nil {
+			log.Warnf("Failed to read request body: %s", err)
+			writer.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		var generateRequest GenerateRainbowTableRequest
+		err = json.Unmarshal(requestBody, &generateRequest)
+
+		if err != nil {
+			log.Warnf("Failed to unmarshal generateRainbowTable request: %s", err)
+			writer.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		if generateRequest.Name == "" {
+			writer.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(writer).
+				Encode(map[string]string{"error": "'name' is required for generate rainbow table requests"})
+			return
+		}
+
+		rainbowTable, err := handleGenerateRainbowTable(
+			rainbowTableService,
+			hashbashMqProducers,
+			generateRequest,
+		)
+
+		if err != nil {
+			log.Errorf("Failed to publish generateRainbowTable request: %s", err)
+			writer.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		writer.Header().Set("Location", fmt.Sprintf("/api/rainbow-table/%d", rainbowTable.ID))
+		writer.WriteHeader(http.StatusCreated)
+		writer.Header()
 	}
 }

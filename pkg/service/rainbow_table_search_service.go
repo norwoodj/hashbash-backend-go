@@ -23,16 +23,16 @@ type RainbowTableSearchService interface {
 }
 
 type MySQLRainbowTableSearchService struct {
-	DatabaseClient *gorm.DB
+	databaseClient *gorm.DB
 }
 
 func NewRainbowTableSearchService(db *gorm.DB) RainbowTableSearchService {
-	return MySQLRainbowTableSearchService{DatabaseClient: db}
+	return MySQLRainbowTableSearchService{databaseClient: db}
 }
 
 func (service MySQLRainbowTableSearchService) CountRainbowTableSearches(rainbowTableId int16, includeNotFound bool) int64 {
 	var rainbowTableSearchCount int64
-	query := service.DatabaseClient.
+	query := service.databaseClient.
 		Model(&model.RainbowTableSearch{}).
 		Where("rainbowTableId = ?", rainbowTableId)
 
@@ -50,7 +50,7 @@ func (service MySQLRainbowTableSearchService) ListSearchesByRainbowTableId(
 	pageConfig PageConfig,
 ) []model.RainbowTableSearch {
 	rainbowTableSearches := make([]model.RainbowTableSearch, 0)
-	query := applyPaging(service.DatabaseClient, pageConfig).
+	query := applyPaging(service.databaseClient, pageConfig).
 		Where("rainbowTableId = ?", rainbowTableId)
 
 	if !includeNotFound {
@@ -63,7 +63,7 @@ func (service MySQLRainbowTableSearchService) ListSearchesByRainbowTableId(
 
 func (service MySQLRainbowTableSearchService) GetRainbowTableSearchResults(rainbowTableId int16) RainbowTableSearchResultSummary {
 	searchResults := make([]RainbowTableSearchResults, 0)
-	service.DatabaseClient.
+	service.databaseClient.
 		Model(&model.RainbowTableSearch{}).
 		Select("status AS searchStatus, COUNT(*) AS count").
 		Where("rainbowTableId = ? and status IN (?)", rainbowTableId, []string{model.SearchFound, model.SearchNotFound}).
@@ -86,7 +86,7 @@ func (service MySQLRainbowTableSearchService) GetRainbowTableSearchResults(rainb
 func (service MySQLRainbowTableSearchService) FindRainbowTableSearchById(searchId int64) model.RainbowTableSearch {
 	var rainbowTableSearch model.RainbowTableSearch
 
-	service.DatabaseClient.
+	service.databaseClient.
 		Where("id = ?", searchId).
 		First(&rainbowTableSearch)
 
