@@ -1,7 +1,7 @@
-package mq
+package rabbitmq
 
 import (
-	"github.com/norwoodj/hashbash-backend-go/pkg/rabbit"
+	"github.com/norwoodj/rabbitmq-client-go/rabbitmq"
 	"os"
 
 	log "github.com/sirupsen/logrus"
@@ -22,14 +22,14 @@ func AddRabbitMqFlags(flags *pflag.FlagSet) {
 	flags.IntP("rabbitmq-port", "m", 5672, "The port on which to connect to the hashbash rabbitmq server")
 }
 
-func AcquireMqConnectionOrDie() *rabbit.ServerConnection {
-	rabbitConfig := rabbit.NewConfig(
+func AcquireMqConnectionOrDie() *rabbitmq.ServerConnection {
+	rabbitConfig := rabbitmq.NewConfig(
 		viper.GetString("rabbitmq-hostname"),
 		viper.GetString("rabbitmq-username"),
 		viper.GetString("rabbitmq-password"),
 	)
 
-	connection, err := rabbit.NewServerConnection(rabbitConfig)
+	connection, err := rabbitmq.NewServerConnection(rabbitConfig)
 
 	if err != nil {
 		log.Errorf("Failed to create rabbitmq connection: %s", err)

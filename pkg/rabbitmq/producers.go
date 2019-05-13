@@ -1,19 +1,19 @@
-package mq
+package rabbitmq
 
 import (
-	"github.com/norwoodj/hashbash-backend-go/pkg/rabbit"
+	"github.com/norwoodj/rabbitmq-client-go/rabbitmq"
 	"github.com/streadway/amqp"
 )
 
 type HashbashMqProducers struct {
-	DeleteRainbowTableProducer   *rabbit.Producer
-	GenerateRainbowTableProducer *rabbit.Producer
-	SearchRainbowTableProducer   *rabbit.Producer
+	DeleteRainbowTableProducer   *rabbitmq.Producer
+	GenerateRainbowTableProducer *rabbitmq.Producer
+	SearchRainbowTableProducer   *rabbitmq.Producer
 }
 
-func newProducer(connection *rabbit.ServerConnection, routingKey string) (*rabbit.Producer, error) {
-	serializer := rabbit.JsonMessageSerializer{}
-	return rabbit.NewProducer(
+func newProducer(connection *rabbitmq.ServerConnection, routingKey string) (*rabbitmq.Producer, error) {
+	serializer := rabbitmq.JsonMessageSerializer{}
+	return rabbitmq.NewProducer(
 		connection,
 		serializer,
 		taskExchangeName,
@@ -24,7 +24,7 @@ func newProducer(connection *rabbit.ServerConnection, routingKey string) (*rabbi
 
 }
 
-func CreateProducers(connection *rabbit.ServerConnection) (HashbashMqProducers, error) {
+func CreateProducers(connection *rabbitmq.ServerConnection) (HashbashMqProducers, error) {
 	deleteRainbowTableProducer, err0 := newProducer(connection, deleteRainbowTableRoutingKey)
 	generateRainbowTableProducer, err1 := newProducer(connection, generateRainbowTableRoutingKey)
 	searchRainbowTableProducer, err2 := newProducer(connection, searchRainbowTableRoutingKey)

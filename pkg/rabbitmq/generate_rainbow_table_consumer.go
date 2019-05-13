@@ -1,7 +1,7 @@
-package mq
+package rabbitmq
 
 import (
-	"github.com/norwoodj/hashbash-backend-go/pkg/rabbit"
+	"github.com/norwoodj/rabbitmq-client-go/rabbitmq"
 	log "github.com/sirupsen/logrus"
 	"github.com/streadway/amqp"
 )
@@ -13,9 +13,9 @@ func (worker *GenerateRainbowTableWorker) HandleMessage(message *amqp.Delivery) 
 	return nil
 }
 
-func NewGenerateRainbowTableConsumer(connection *rabbit.ServerConnection) (*rabbit.Consumer, error) {
+func NewGenerateRainbowTableConsumer(connection *rabbitmq.ServerConnection) (*rabbitmq.Consumer, error) {
 	consumerWorker := &GenerateRainbowTableWorker{}
-	return rabbit.NewConsumer(
+	return rabbitmq.NewConsumer(
 		connection,
 		consumerWorker,
 		taskExchangeName,

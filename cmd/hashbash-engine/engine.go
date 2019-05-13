@@ -6,13 +6,13 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/norwoodj/hashbash-backend-go/pkg/mq"
+	"github.com/norwoodj/hashbash-backend-go/pkg/rabbitmq"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
-func startConsumersAndHandleSignals(consumers mq.HashbashMqConsumerWorkers, shutdownGraceDuration time.Duration) {
+func startConsumersAndHandleSignals(consumers rabbitmq.HashbashMqConsumerWorkers, shutdownGraceDuration time.Duration) {
 	consumerStartErrorChannels := []chan error{make(chan error), make(chan error), make(chan error)}
 	quit := make(chan bool)
 
@@ -49,10 +49,10 @@ func hashbashEngine(_ *cobra.Command, _ []string) {
 	//rainbowTableService := service.NewRainbowTableService(db)
 	//rainbowTableSearchService := service.NewRainbowTableSearchService(db)
 
-	connection := mq.AcquireMqConnectionOrDie()
+	connection := rabbitmq.AcquireMqConnectionOrDie()
 	defer connection.Close()
 
-	hashbashConsumers, err := mq.CreateConsumerWorkers(connection)
+	hashbashConsumers, err := rabbitmq.CreateConsumerWorkers(connection)
 	if err != nil {
 		log.Errorf("Failed to instantiate rabbitmq consumers: %s", err)
 		os.Exit(1)

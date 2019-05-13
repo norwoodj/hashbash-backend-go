@@ -1,16 +1,16 @@
-package mq
+package rabbitmq
 
 import (
-	"github.com/norwoodj/hashbash-backend-go/pkg/rabbit"
+	"github.com/norwoodj/rabbitmq-client-go/rabbitmq"
 )
 
 type HashbashMqConsumerWorkers struct {
-	HashbashDeleteRainbowTableConsumer   *rabbit.Consumer
-	HashbashGenerateRainbowTableConsumer *rabbit.Consumer
-	HashbashSearchRainbowTableConsumer   *rabbit.Consumer
+	HashbashDeleteRainbowTableConsumer   *rabbitmq.Consumer
+	HashbashGenerateRainbowTableConsumer *rabbitmq.Consumer
+	HashbashSearchRainbowTableConsumer   *rabbitmq.Consumer
 }
 
-func CreateConsumerWorkers(connection *rabbit.ServerConnection) (HashbashMqConsumerWorkers, error) {
+func CreateConsumerWorkers(connection *rabbitmq.ServerConnection) (HashbashMqConsumerWorkers, error) {
 	deleteRainbowTableConsumer, err0 := NewDeleteRainbowTableConsumer(connection)
 	generateRainbowTableConsumer, err1 := NewGenerateRainbowTableConsumer(connection)
 	searchRainbowTableConsumer, err2 := NewSearchRainbowTableConsumer(connection)

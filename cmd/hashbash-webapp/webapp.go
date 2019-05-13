@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/norwoodj/hashbash-backend-go/pkg/frontend"
-	"github.com/norwoodj/hashbash-backend-go/pkg/mq"
+	"github.com/norwoodj/hashbash-backend-go/pkg/rabbitmq"
 	"github.com/norwoodj/hashbash-backend-go/pkg/service"
 	"net/http"
 	"os"
@@ -91,10 +91,10 @@ func hashbashWebapp(_ *cobra.Command, _ []string) {
 	rainbowTableService := service.NewRainbowTableService(db)
 	rainbowTableSearchService := service.NewRainbowTableSearchService(db)
 
-	connection := mq.AcquireMqConnectionOrDie()
+	connection := rabbitmq.AcquireMqConnectionOrDie()
 	defer connection.Close()
 
-	hashbashProducers, err := mq.CreateProducers(connection)
+	hashbashProducers, err := rabbitmq.CreateProducers(connection)
 	if err != nil {
 		log.Errorf("Failed to instantiate rabbitmq producers: %s", err)
 		os.Exit(1)

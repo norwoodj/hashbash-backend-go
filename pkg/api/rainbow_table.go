@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/norwoodj/hashbash-backend-go/pkg/model"
-	"github.com/norwoodj/hashbash-backend-go/pkg/mq"
+	"github.com/norwoodj/hashbash-backend-go/pkg/rabbitmq"
 	"github.com/norwoodj/hashbash-backend-go/pkg/util"
 	"io/ioutil"
 	"net/http"
@@ -43,7 +43,7 @@ func rainbowTableFromRequest(generateRequest GenerateRainbowTableRequest) model.
 	}
 }
 
-func AddRainbowTableRoutes(router *mux.Router, service service.RainbowTableService, producers mq.HashbashMqProducers) {
+func AddRainbowTableRoutes(router *mux.Router, service service.RainbowTableService, producers rabbitmq.HashbashMqProducers) {
 	router.
 		HandleFunc("/api/rainbow-table", getListRainbowTablesHandler(service)).
 		Methods("GET")
@@ -115,7 +115,7 @@ func getCountRainbowTablesHandler(rainbowTableService service.RainbowTableServic
 
 func handleGenerateRainbowTable(
 	rainbowTableService service.RainbowTableService,
-	hashbashMqProducers mq.HashbashMqProducers,
+	hashbashMqProducers rabbitmq.HashbashMqProducers,
 	generateRequest GenerateRainbowTableRequest,
 ) (model.RainbowTable, error) {
 	rainbowTable := rainbowTableFromRequest(generateRequest)
@@ -127,14 +127,14 @@ func handleGenerateRainbowTable(
 
 	log.Infof("Created rainbow table %s with id %d. Publishing request for generation...", rainbowTable.Name, rainbowTable.ID)
 	err = hashbashMqProducers.GenerateRainbowTableProducer.
-		PublishMessage(mq.RainbowTableMessage{RainbowTableId: rainbowTable.ID})
+		PublishMessage(rabbitmq.RainbowTableMessage{RainbowTableId: rainbowTable.ID})
 
 	return rainbowTable, err
 }
 
 func getGenerateRainbowTableFormHandler(
 	rainbowTableService service.RainbowTableService,
-	hashbashMqProducers mq.HashbashMqProducers,
+	hashbashMqProducers rabbitmq.HashbashMqProducers,
 ) func(writer http.ResponseWriter, request *http.Request) {
 	return func(writer http.ResponseWriter, request *http.Request) {
 		err := request.ParseForm()
@@ -195,7 +195,7 @@ func getGenerateRainbowTableFormHandler(
 
 func getGenerateRainbowTableJsonHandler(
 	rainbowTableService service.RainbowTableService,
-	hashbashMqProducers mq.HashbashMqProducers,
+	hashbashMqProducers rabbitmq.HashbashMqProducers,
 ) func(writer http.ResponseWriter, request *http.Request) {
 	return func(writer http.ResponseWriter, request *http.Request) {
 		requestBody, err := ioutil.ReadAll(request.Body)

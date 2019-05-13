@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/norwoodj/hashbash-backend-go/pkg/database"
-	"github.com/norwoodj/hashbash-backend-go/pkg/mq"
+	"github.com/norwoodj/hashbash-backend-go/pkg/rabbitmq"
 	"github.com/norwoodj/hashbash-backend-go/pkg/util"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -22,7 +22,7 @@ func newRootCommand() *cobra.Command {
 
 	util.AddDefaultFlags(engineFlags)
 	database.AddDatabaseFlags(engineFlags)
-	mq.AddRabbitMqFlags(engineFlags)
+	rabbitmq.AddRabbitMqFlags(engineFlags)
 
 	viper.AutomaticEnv()
 	viper.SetEnvPrefix("HASHBASH")
