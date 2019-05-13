@@ -2,29 +2,33 @@ package api
 
 import (
 	"encoding/json"
-	"github.com/norwoodj/hashbash-backend-go/pkg/service"
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"github.com/norwoodj/hashbash-backend-go/pkg/service"
 )
 
 func AddRainbowTableSearchRoutes(router *mux.Router, rainbowTableSearchService service.RainbowTableSearchService) {
 	router.
-		HandleFunc("/api/rainbow-table/{id:[0-9]+}/search", getRainbowTableSearchesByIdHandler(rainbowTableSearchService)).
+		HandleFunc("/api/rainbow-table/{rainbowTableId:[0-9]+}/search", getRainbowTableSearchesByIdHandler(rainbowTableSearchService)).
 		Methods("GET")
 
 	router.
-		HandleFunc("/api/rainbow-table/{id:[0-9]+}/search/count", getCountRainbowTableSearchesHandler(rainbowTableSearchService)).
+		HandleFunc("/api/rainbow-table/{rainbowTableId:[0-9]+}/search/count", getCountRainbowTableSearchesHandler(rainbowTableSearchService)).
 		Methods("GET")
 
 	router.
-		HandleFunc("/api/rainbow-table/{id:[0-9]+}/searchResults", getRainbowTableSearchResultsHandler(rainbowTableSearchService)).
+		HandleFunc("/api/rainbow-table/{rainbowTableId:[0-9]+}/searchResults", getRainbowTableSearchResultsHandler(rainbowTableSearchService)).
+		Methods("GET")
+
+	router.
+		HandleFunc("/api/rainbow-table/search/{searchId:[0-9]+}", getRainbowTableSearchByIdHandler(rainbowTableSearchService)).
 		Methods("GET")
 }
 
 func getRainbowTableSearchesByIdHandler(service service.RainbowTableSearchService) func(writer http.ResponseWriter, request *http.Request) {
 	return func(writer http.ResponseWriter, request *http.Request) {
-		rainbowTableId, err := getIdPathParamValue(writer, request)
+		rainbowTableId, err := getIdPathParamValue("rainbowTableId", writer, request, 16)
 		if err != nil {
 			return
 		}
@@ -35,7 +39,7 @@ func getRainbowTableSearchesByIdHandler(service service.RainbowTableSearchServic
 		}
 
 		includeNotFound := getIncludeNotFoundQueryParam(request.URL.Query())
-		rainbowTableSearches := service.ListRainbowTableSearches(rainbowTableId, includeNotFound, pageConfig)
+		rainbowTableSearches := service.ListSearchesByRainbowTableId(convertRainbowTableId(rainbowTableId), includeNotFound, pageConfig)
 		writer.Header().Set("Content-Type", "application/json")
 		json.
 			NewEncoder(writer).
@@ -45,13 +49,13 @@ func getRainbowTableSearchesByIdHandler(service service.RainbowTableSearchServic
 
 func getCountRainbowTableSearchesHandler(service service.RainbowTableSearchService) func(writer http.ResponseWriter, request *http.Request) {
 	return func(writer http.ResponseWriter, request *http.Request) {
-		rainbowTableId, err := getIdPathParamValue(writer, request)
+		rainbowTableId, err := getIdPathParamValue("rainbowTableId", writer, request, 16)
 		if err != nil {
 			return
 		}
 
 		includeNotFound := getIncludeNotFoundQueryParam(request.URL.Query())
-		rainbowTableSearchCount := service.CountRainbowTableSearches(rainbowTableId, includeNotFound)
+		rainbowTableSearchCount := service.CountRainbowTableSearches(convertRainbowTableId(rainbowTableId), includeNotFound)
 		writer.Header().Set("Content-Type", "application/json")
 		json.
 			NewEncoder(writer).
@@ -61,15 +65,30 @@ func getCountRainbowTableSearchesHandler(service service.RainbowTableSearchServi
 
 func getRainbowTableSearchResultsHandler(service service.RainbowTableSearchService) func(writer http.ResponseWriter, request *http.Request) {
 	return func(writer http.ResponseWriter, request *http.Request) {
-		rainbowTableId, err := getIdPathParamValue(writer, request)
+		rainbowTableId, err := getIdPathParamValue("rainbowTableId", writer, request, 16)
 		if err != nil {
 			return
 		}
 
-		searchResultResponse := service.GetRainbowTableSearchResults(rainbowTableId)
+		searchResultResponse := service.GetRainbowTableSearchResults(convertRainbowTableId(rainbowTableId))
 		writer.Header().Set("Content-Type", "application/json")
 		json.
 			NewEncoder(writer).
 			Encode(searchResultResponse)
+	}
+}
+
+func getRainbowTableSearchByIdHandler(service service.RainbowTableSearchService) func(writer http.ResponseWriter, request *http.Request) {
+	return func(writer http.ResponseWriter, request *http.Request) {
+		rainbowTableSearchId, err := getIdPathParamValue("searchId", writer, request, 64)
+		if err != nil {
+			return
+		}
+
+		rainbowTableSearches := service.FindRainbowTableSearchById(rainbowTableSearchId.(int64))
+		writer.Header().Set("Content-Type", "application/json")
+		json.
+			NewEncoder(writer).
+			Encode(rainbowTableSearches)
 	}
 }

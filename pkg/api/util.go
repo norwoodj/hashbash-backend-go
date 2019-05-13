@@ -28,7 +28,7 @@ func getIntQueryParamValue(
 	parsedValue, err := strconv.Atoi(value)
 
 	if err != nil {
-		writer.WriteHeader(400)
+		writer.WriteHeader(http.StatusBadRequest)
 		writer.Write([]byte(fmt.Sprintf("Failed to parse integer query parameter %s: %s", parameter, value)))
 		return parsedValue, err
 	}
@@ -36,15 +36,24 @@ func getIntQueryParamValue(
 	return parsedValue, nil
 }
 
-func getIdPathParamValue(writer http.ResponseWriter, request *http.Request) (int16, error) {
+func getIdPathParamValue(
+	idParamName string,
+	writer http.ResponseWriter,
+	request *http.Request,
+	bitSize int,
+) (interface{}, error) {
 	vars := mux.Vars(request)
-	id, err := strconv.ParseInt(vars["id"], 10, 16)
+	id, err := strconv.ParseInt(vars[idParamName], 10, bitSize)
 
 	if err != nil {
-		writer.WriteHeader(400)
+		writer.WriteHeader(http.StatusBadRequest)
 		writer.Write([]byte(fmt.Sprintf("Failed to parse id from path param: %s", vars["id"])))
 		return 0, err
 	}
 
-	return int16(id), nil
+	return id, nil
+}
+
+func convertRainbowTableId(rainbowTableId interface{}) int16 {
+	return int16(rainbowTableId.(int64))
 }

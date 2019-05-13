@@ -2,19 +2,20 @@ package api
 
 import (
 	"encoding/json"
+	"github.com/norwoodj/hashbash-backend-go/pkg/mq"
 	"net/http"
 
 	"github.com/gorilla/mux"
 	"github.com/norwoodj/hashbash-backend-go/pkg/service"
 )
 
-func AddRainbowTableRoutes(router *mux.Router, service service.RainbowTableService) {
+func AddRainbowTableRoutes(router *mux.Router, service service.RainbowTableService, producers mq.HashbashMqProducers) {
 	router.
 		HandleFunc("/api/rainbow-table", getListRainbowTablesHandler(service)).
 		Methods("GET")
 
 	router.
-		HandleFunc("/api/rainbow-table/{id:[0-9]+}", getRainbowTableByIdHandler(service)).
+		HandleFunc("/api/rainbow-table/{rainbowTableId:[0-9]+}", getRainbowTableByIdHandler(service)).
 		Methods("GET")
 
 	router.
@@ -39,15 +40,15 @@ func getListRainbowTablesHandler(service service.RainbowTableService) func(write
 
 func getRainbowTableByIdHandler(service service.RainbowTableService) func(writer http.ResponseWriter, request *http.Request) {
 	return func(writer http.ResponseWriter, request *http.Request) {
-		rainbowTableId, err := getIdPathParamValue(writer, request)
+		rainbowTableId, err := getIdPathParamValue("rainbowTableId", writer, request, 16)
 		if err != nil {
 			return
 		}
 
-		rainbowTable := service.FindRainbowTableById(rainbowTableId)
+		rainbowTable := service.FindRainbowTableById(convertRainbowTableId(rainbowTableId))
 
 		if rainbowTable.Name == "" {
-			writer.WriteHeader(404)
+			writer.WriteHeader(http.StatusNotFound)
 			return
 		}
 

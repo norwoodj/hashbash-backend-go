@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/norwoodj/hashbash-backend-go/pkg/frontend"
+	"github.com/norwoodj/hashbash-backend-go/pkg/mq"
 	"github.com/norwoodj/hashbash-backend-go/pkg/service"
 	"net/http"
 	"os"
@@ -90,6 +91,20 @@ func hashbashWebapp(_ *cobra.Command, _ []string) {
 	rainbowTableService := service.NewRainbowTableService(db)
 	rainbowTableSearchService := service.NewRainbowTableSearchService(db)
 
+	connection, err := mq.AcquireMqConnection()
+	defer connection.Close()
+
+	if err != nil {
+		log.Errorf("Failed to create rabbitmq connection: %s", err)
+		os.Exit(1)
+	}
+
+	hashbashProducers, err := mq.CreateProducers(connection)
+	if err != nil {
+		log.Errorf("Failed to instantiate rabbitmq producers: %s", err)
+		os.Exit(1)
+	}
+
 	port := viper.GetInt("web-port")
 	router := mux.NewRouter()
 	server := http.Server{
@@ -100,11 +115,11 @@ func hashbashWebapp(_ *cobra.Command, _ []string) {
 		Handler:      router,
 	}
 
-	api.AddRainbowTableRoutes(router, rainbowTableService)
+	api.AddRainbowTableRoutes(router, rainbowTableService, hashbashProducers)
 	api.AddRainbowTableSearchRoutes(router, rainbowTableSearchService)
 
 	frontendTemplatesDir := viper.GetString("frontend-template-path")
-	err := frontend.RegisterTemplateHandler(router, frontendTemplatesDir)
+	err = frontend.RegisterTemplateHandler(router, frontendTemplatesDir)
 	if err != nil {
 		log.Errorf("Failed to read frontend directory %s: %s", frontendTemplatesDir, err)
 		os.Exit(1)

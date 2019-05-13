@@ -17,8 +17,9 @@ type RainbowTableSearchResultSummary struct {
 
 type RainbowTableSearchService interface {
 	CountRainbowTableSearches(rainbowTableId int16, includeNotFound bool) int64
-	ListRainbowTableSearches(rainbowTableId int16, includeNotFound bool, pageConfig PageConfig) []model.RainbowTableSearch
+	ListSearchesByRainbowTableId(rainbowTableId int16, includeNotFound bool, pageConfig PageConfig) []model.RainbowTableSearch
 	GetRainbowTableSearchResults(rainbowTableId int16) RainbowTableSearchResultSummary
+	FindRainbowTableSearchById(searchId int64) model.RainbowTableSearch
 }
 
 type MySQLRainbowTableSearchService struct {
@@ -43,7 +44,7 @@ func (service MySQLRainbowTableSearchService) CountRainbowTableSearches(rainbowT
 	return rainbowTableSearchCount
 }
 
-func (service MySQLRainbowTableSearchService) ListRainbowTableSearches(
+func (service MySQLRainbowTableSearchService) ListSearchesByRainbowTableId(
 	rainbowTableId int16,
 	includeNotFound bool,
 	pageConfig PageConfig,
@@ -80,4 +81,14 @@ func (service MySQLRainbowTableSearchService) GetRainbowTableSearchResults(rainb
 	}
 
 	return searchResultSummary
+}
+
+func (service MySQLRainbowTableSearchService) FindRainbowTableSearchById(searchId int64) model.RainbowTableSearch {
+	var rainbowTableSearch model.RainbowTableSearch
+
+	service.DatabaseClient.
+		Where("id = ?", searchId).
+		First(&rainbowTableSearch)
+
+	return rainbowTableSearch
 }
