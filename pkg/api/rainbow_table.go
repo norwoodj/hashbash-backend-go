@@ -146,7 +146,7 @@ func getGenerateRainbowTableHandler(
 			PublishMessage(mq.RainbowTableMessage{RainbowTableId: rainbowTable.ID})
 
 		if err != nil {
-			log.Warnf("Failed to publish generateRainbowTable request: %s", err)
+			log.Errorf("Failed to publish generateRainbowTable request: %s", err)
 			http.Redirect(
 				writer,
 				request,
