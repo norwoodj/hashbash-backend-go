@@ -15,7 +15,7 @@ import (
 )
 
 type PageModel struct {
-	Error string
+	Error          string
 	RainbowTableId string
 }
 
@@ -69,7 +69,7 @@ func RegisterTemplateHandler(router *mux.Router, frontendDirPath string) error {
 	templateRegex := createTemplateRegex(templateFilenames)
 
 	router.HandleFunc("/", func(writer http.ResponseWriter, request *http.Request) {
-		http.Redirect(writer, request, "/home", 301)
+		http.Redirect(writer, request, "/home", http.StatusPermanentRedirect)
 	})
 
 	router.HandleFunc("/{template}", func(writer http.ResponseWriter, request *http.Request) {
@@ -94,7 +94,7 @@ func RegisterTemplateHandler(router *mux.Router, frontendDirPath string) error {
 		}
 
 		pageModel := PageModel{
-			Error: queryParams.Get("error"),
+			Error:          queryParams.Get("error"),
 			RainbowTableId: rainbowTableId,
 		}
 

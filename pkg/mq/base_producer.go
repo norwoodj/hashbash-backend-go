@@ -38,7 +38,7 @@ func NewMqProducer(
 	return producer, nil
 }
 
-func (producer BaseMqProducer) PublishMessage(msg interface{}) error {
+func (producer BaseMqProducer) PublishMessage(msg RainbowTableMessage) error {
 	serializedMsg, err := json.Marshal(msg)
 	if err != nil {
 		return fmt.Errorf("failed to serialize message for publishing: %s", err)

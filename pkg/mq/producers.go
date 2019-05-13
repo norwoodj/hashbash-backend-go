@@ -3,13 +3,13 @@ package mq
 import "github.com/streadway/amqp"
 
 type HashbashMqProducers struct {
-	CreateRainbowTableProducer *BaseMqProducer
-	DeleteRainbowTableProducer *BaseMqProducer
-	SearchRainbowTableProducer *BaseMqProducer
+	GenerateRainbowTableProducer *BaseMqProducer
+	DeleteRainbowTableProducer   *BaseMqProducer
+	SearchRainbowTableProducer   *BaseMqProducer
 }
 
 func CreateProducers(connection *amqp.Connection) (HashbashMqProducers, error) {
-	createRainbowTableProducer, err0 := NewMqProducer(connection, taskExchangeName, "topic", generateRainbowTableQueueName)
+	generateRainbowTableProducer, err0 := NewMqProducer(connection, taskExchangeName, "topic", generateRainbowTableQueueName)
 	deleteRainbowTableProducer, err1 := NewMqProducer(connection, taskExchangeName, "topic", deleteRainbowTableQueueName)
 	searchRainbowTableProducer, err2 := NewMqProducer(connection, taskExchangeName, "topic", searchRainbowTableQueueName)
 
@@ -19,8 +19,8 @@ func CreateProducers(connection *amqp.Connection) (HashbashMqProducers, error) {
 		}
 	}
 	return HashbashMqProducers{
-		CreateRainbowTableProducer: &createRainbowTableProducer,
-		DeleteRainbowTableProducer: &deleteRainbowTableProducer,
-		SearchRainbowTableProducer: &searchRainbowTableProducer,
+		GenerateRainbowTableProducer: &generateRainbowTableProducer,
+		DeleteRainbowTableProducer:   &deleteRainbowTableProducer,
+		SearchRainbowTableProducer:   &searchRainbowTableProducer,
 	}, nil
 }

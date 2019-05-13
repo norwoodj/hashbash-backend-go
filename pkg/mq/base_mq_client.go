@@ -89,7 +89,7 @@ func (client BaseMqClient) declareQueueRouting() error {
 	queueName := client.getQueueName()
 	log.Infof("Declaring rabbitmq queue %s", queueName)
 	dlqOptions := amqp.Table{
-		"x-dead-letter-exchange":   deadLetterExchangeName,
+		"x-dead-letter-exchange":    deadLetterExchangeName,
 		"x-dead-letter-routing-key": queueName,
 	}
 

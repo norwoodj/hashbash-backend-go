@@ -14,7 +14,6 @@ const generateRainbowTableQueueName = "generateRainbowTable"
 const deleteRainbowTableQueueName = "deleteRainbowTable"
 const searchRainbowTableQueueName = "searchRainbowTable"
 
-
 func formatRabbitMqDsn(
 	hostname string,
 	username string,
@@ -37,8 +36,7 @@ func AddRabbitMqFlags(flags *pflag.FlagSet) {
 	flags.IntP("rabbitmq-port", "m", 5672, "The port on which to connect to the hashbash rabbitmq server")
 }
 
-func AcquireMqConnection(
-) (*amqp.Connection, error) {
+func AcquireMqConnection() (*amqp.Connection, error) {
 	censoredRabbitDsn := formatRabbitMqDsn(
 		viper.GetString("rabbitmq-host"),
 		viper.GetString("rabbitmq-username"),

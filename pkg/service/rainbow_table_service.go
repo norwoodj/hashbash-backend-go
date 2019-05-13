@@ -9,6 +9,7 @@ type RainbowTableService interface {
 	CountRainbowTables() int64
 	ListRainbowTables(PageConfig) []model.RainbowTable
 	FindRainbowTableById(int16) model.RainbowTable
+	CreateRainbowTable(*model.RainbowTable) *model.RainbowTable
 }
 
 type MySQLRainbowTableService struct {
@@ -17,6 +18,13 @@ type MySQLRainbowTableService struct {
 
 func NewRainbowTableService(db *gorm.DB) RainbowTableService {
 	return MySQLRainbowTableService{DatabaseClient: db}
+}
+
+func (service MySQLRainbowTableService) CreateRainbowTable(rainbowTable *model.RainbowTable) *model.RainbowTable {
+	service.DatabaseClient.
+		Save(rainbowTable)
+
+	return rainbowTable
 }
 
 func (service MySQLRainbowTableService) CountRainbowTables() int64 {

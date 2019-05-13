@@ -8,7 +8,6 @@ import (
 	"strconv"
 )
 
-
 func getIncludeNotFoundQueryParam(queryParameters url.Values) bool {
 	return queryParameters.Get("includeNotFound") == "true"
 }
