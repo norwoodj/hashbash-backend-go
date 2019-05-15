@@ -17,8 +17,9 @@ type reductionFunctionFamily func([]byte, int) string
 
 func getDefaultReductionFunctionFamily(passwordLength int, charset string) reductionFunctionFamily {
 	characterSetLength := len(charset)
-	plaintextBuilder := strings.Builder{}
 	return func(digest []byte, chainIndex int) string {
+		plaintextBuilder := strings.Builder{}
+
 		for i := 0; i < passwordLength; i++ {
 			value := abs((int(digest[i]) ^ chainIndex) % characterSetLength)
 			plaintextBuilder.WriteByte(charset[value])

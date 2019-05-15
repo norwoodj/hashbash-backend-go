@@ -28,10 +28,10 @@ type MySQLRainbowTableSearchService struct {
 }
 
 func NewRainbowTableSearchService(db *gorm.DB) RainbowTableSearchService {
-	return MySQLRainbowTableSearchService{databaseClient: db}
+	return &MySQLRainbowTableSearchService{databaseClient: db}
 }
 
-func (service MySQLRainbowTableSearchService) CountRainbowTableSearches(rainbowTableId int16, includeNotFound bool) int64 {
+func (service *MySQLRainbowTableSearchService) CountRainbowTableSearches(rainbowTableId int16, includeNotFound bool) int64 {
 	var rainbowTableSearchCount int64
 	query := service.databaseClient.
 		Model(&model.RainbowTableSearch{}).
@@ -45,7 +45,7 @@ func (service MySQLRainbowTableSearchService) CountRainbowTableSearches(rainbowT
 	return rainbowTableSearchCount
 }
 
-func (service MySQLRainbowTableSearchService) CreateRainbowTableSearch(rainbowTableId int16, hash string) (model.RainbowTableSearch, error) {
+func (service *MySQLRainbowTableSearchService) CreateRainbowTableSearch(rainbowTableId int16, hash string) (model.RainbowTableSearch, error) {
 	var rainbowTable model.RainbowTable
 	service.databaseClient.
 		Where("id = ?", rainbowTableId).
@@ -72,7 +72,7 @@ func (service MySQLRainbowTableSearchService) CreateRainbowTableSearch(rainbowTa
 	return rainbowTableSearch, err
 }
 
-func (service MySQLRainbowTableSearchService) ListSearchesByRainbowTableId(
+func (service *MySQLRainbowTableSearchService) ListSearchesByRainbowTableId(
 	rainbowTableId int16,
 	includeNotFound bool,
 	pageConfig PageConfig,
@@ -89,7 +89,7 @@ func (service MySQLRainbowTableSearchService) ListSearchesByRainbowTableId(
 	return rainbowTableSearches
 }
 
-func (service MySQLRainbowTableSearchService) GetRainbowTableSearchResults(rainbowTableId int16) RainbowTableSearchResultSummary {
+func (service *MySQLRainbowTableSearchService) GetRainbowTableSearchResults(rainbowTableId int16) RainbowTableSearchResultSummary {
 	searchResults := make([]RainbowTableSearchResults, 0)
 	service.databaseClient.
 		Model(&model.RainbowTableSearch{}).
@@ -111,7 +111,7 @@ func (service MySQLRainbowTableSearchService) GetRainbowTableSearchResults(rainb
 	return searchResultSummary
 }
 
-func (service MySQLRainbowTableSearchService) FindRainbowTableSearchById(searchId int64) model.RainbowTableSearch {
+func (service *MySQLRainbowTableSearchService) FindRainbowTableSearchById(searchId int64) model.RainbowTableSearch {
 	var rainbowTableSearch model.RainbowTableSearch
 
 	service.databaseClient.

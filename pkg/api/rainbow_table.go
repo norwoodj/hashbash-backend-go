@@ -203,7 +203,6 @@ func getGenerateRainbowTableJsonHandler(
 ) func(writer http.ResponseWriter, request *http.Request) {
 	return func(writer http.ResponseWriter, request *http.Request) {
 		requestBody, err := ioutil.ReadAll(request.Body)
-		log.Debugf("Received rainbow table generate request: %s", string(requestBody))
 
 		if err != nil {
 			log.Warnf("Failed to read request body: %s", err)

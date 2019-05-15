@@ -6,6 +6,8 @@ import (
 
 const StatusQueued = "QUEUED"
 const StatusStarted = "STARTED"
+const StatusFailed = "FAILED"
+const StatusCompleted = "COMPLETED"
 
 type RainbowTable struct {
 	ID              int16      `gorm:"primary_key,column:id"json:"id"`

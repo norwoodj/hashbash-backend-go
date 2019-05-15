@@ -19,6 +19,8 @@ func newRootCommand() *cobra.Command {
 
 	engineFlags := rootCmd.PersistentFlags()
 	engineFlags.DurationP("shutdown-timeout", "s", time.Second*3, "The duration for which the server waits for existing connections to finish, e.g. 15s or 1m")
+	engineFlags.Int64("generate-batch-size", 1000, "The size of rainbow chain batches to generate at a time")
+	engineFlags.Int("generate-num-threads", 8, "The number of threads to use when generating rainbow tables")
 
 	util.AddDefaultFlags(engineFlags)
 	database.AddDatabaseFlags(engineFlags)

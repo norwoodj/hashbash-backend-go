@@ -36,7 +36,7 @@ func (hf hashFunction) apply(plaintext string) []byte {
 	return result
 }
 
-var HashFunctionProvidersByName = map[string]hashFunctionProvider{
+var hashFunctionProvidersByName = map[string]hashFunctionProvider{
 	MD5:    {newFunc: md5.New},
 	SHA1:   {newFunc: sha1.New},
 	SHA256: {newFunc: sha256.New},

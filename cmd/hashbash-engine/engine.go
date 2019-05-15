@@ -8,6 +8,7 @@ import (
 
 	"github.com/norwoodj/hashbash-backend-go/pkg/database"
 	"github.com/norwoodj/hashbash-backend-go/pkg/rabbitmq"
+	"github.com/norwoodj/hashbash-backend-go/pkg/rainbow"
 	"github.com/norwoodj/hashbash-backend-go/pkg/service"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -49,12 +50,20 @@ func hashbashEngine(_ *cobra.Command, _ []string) {
 
 	db := database.GetConnectionOrDie()
 	rainbowTableService := service.NewRainbowTableService(db)
+	rainbowChainService := service.NewRainbowChainService(db)
 	//rainbowTableSearchService := service.NewRainbowTableSearchService(db)
+
+	jobConfig := rainbow.TableGenerateJobConfig{
+		ChainBatchSize: viper.GetInt64("generate-batch-size"),
+		NumThreads: viper.GetInt("generate-num-threads"),
+	}
+
+	rainbowTableGenerateJobService := rainbow.NewTableGeneratorJobService(rainbowChainService, rainbowTableService, jobConfig)
 
 	connection := rabbitmq.AcquireMqConnectionOrDie()
 	defer connection.Close()
 
-	hashbashConsumers, err := rabbitmq.CreateConsumerWorkers(connection, rainbowTableService)
+	hashbashConsumers, err := rabbitmq.CreateConsumerWorkers(connection, rainbowTableService, rainbowTableGenerateJobService)
 	if err != nil {
 		log.Errorf("Failed to instantiate rabbitmq consumers: %s", err)
 		os.Exit(1)
