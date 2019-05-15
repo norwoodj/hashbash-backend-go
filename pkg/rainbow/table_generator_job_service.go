@@ -46,7 +46,7 @@ func randomString(characterSet *string, stringLength int64) string {
 	return stringBuilder.String()
 }
 
-func (service *TableGeneratorJobService) spawnChainGeneratorThread(
+func (service *TableGeneratorJobService) runChainGeneratorThread(
 	rainbowTable model.RainbowTable,
 	chainGeneratorService *chainGeneratorService,
 	batchesRemaining *int64,
@@ -57,7 +57,7 @@ func (service *TableGeneratorJobService) spawnChainGeneratorThread(
 	chainList := make([]model.RainbowChain, service.jobConfig.ChainBatchSize)
 	chainLength := int(rainbowTable.ChainLength)
 
-	for atomic.AddInt64(batchesRemaining, -1) > 0 {
+	for atomic.AddInt64(batchesRemaining, -1) >= 0 {
 		for i := 0; i < int(service.jobConfig.ChainBatchSize); i++ {
 			startPlaintext := randomString(&rainbowTable.CharacterSet, rainbowTable.PasswordLength)
 			chainList[i] = chainGeneratorService.generateRainbowChain(startPlaintext, chainLength)
@@ -77,7 +77,7 @@ func (service *TableGeneratorJobService) spawnChainGeneratorThread(
 	log.Debugf("No batches remaining to be generated for rainbow table %d, exiting", rainbowTable.ID)
 }
 
-func (service *TableGeneratorJobService) RunGenerateJobForTable(rainbowTable model.RainbowTable) error {
+func (service *TableGeneratorJobService) checkAndUpdateRainbowTableStatus(rainbowTable model.RainbowTable) error {
 	if rainbowTable.Status != model.StatusQueued {
 		return fmt.Errorf("cannot generate a rainbow table that is not in the %s state", model.StatusQueued)
 	}
@@ -87,32 +87,54 @@ func (service *TableGeneratorJobService) RunGenerateJobForTable(rainbowTable mod
 		return fmt.Errorf("failed to update rainbow table status to %s: %s", model.StatusStarted, err)
 	}
 
-	hashFunctionProvider, found := hashFunctionProvidersByName[rainbowTable.HashFunction]
-	if !found {
-		return fmt.Errorf("invalid hash function specified by rainbow table %s", rainbowTable.HashFunction)
-	}
+	return nil
+}
 
+func (service *TableGeneratorJobService) calculateNumBatches(rainbowTable model.RainbowTable) int64 {
 	batchesRemaining := rainbowTable.NumChains / service.jobConfig.ChainBatchSize
 
 	if rainbowTable.NumChains % service.jobConfig.ChainBatchSize > 0 {
 		batchesRemaining += 1
 	}
 
+	return batchesRemaining
+}
+
+func (service *TableGeneratorJobService) initializeErrorChannels() []chan error {
 	errorChannels := make([]chan error, service.jobConfig.NumThreads)
+
+	for i := range errorChannels {
+		errorChannels[i] = make(chan error)
+	}
+
+	return errorChannels
+}
+
+func (service *TableGeneratorJobService) spawnChainGeneratorThreads(
+	rainbowTable model.RainbowTable,
+	batchesRemaining *int64,
+	hashFunctionProvider hashFunctionProvider,
+	errorChannels []chan error,
+) {
 	for i := 0; i < service.jobConfig.NumThreads; i++ {
 		chainGeneratorService := newChainGeneratorService(
 			hashFunctionProvider.newHashFunction(),
 			getDefaultReductionFunctionFamily(int(rainbowTable.PasswordLength), rainbowTable.CharacterSet),
 		)
 
-		go service.spawnChainGeneratorThread(
+		go service.runChainGeneratorThread(
 			rainbowTable,
 			chainGeneratorService,
-			&batchesRemaining,
+			batchesRemaining,
 			errorChannels[i],
 		)
 	}
+}
 
+func (service *TableGeneratorJobService) awaitChainGenerationCompletionOrErrors(
+	rainbowTable model.RainbowTable,
+	errorChannels []chan error,
+) error {
 	threadsInError := 0
 	for _, e := range errorChannels {
 		err := <-e
@@ -124,16 +146,60 @@ func (service *TableGeneratorJobService) RunGenerateJobForTable(rainbowTable mod
 	if threadsInError == service.jobConfig.NumThreads {
 		err := service.rainbowTableService.UpdateRainbowTableStatus(rainbowTable.ID, model.StatusFailed)
 		if err != nil {
-			return fmt.Errorf("failed to update rainbow table status to %s: %s", model.StatusFailed, err)
+			return fmt.Errorf(
+				"generation failed for rainbow table %d and failed to update rainbow table status to %s: %s",
+				rainbowTable.ID,
+				model.StatusFailed,
+				err,
+			)
 		}
 
 		return fmt.Errorf("all generate threads failed, failing generate job for rainbow table %d", rainbowTable.ID)
 	}
 
+	return nil
+}
+
+func (service *TableGeneratorJobService) updateFinalChainCountAndStatus(rainbowTable model.RainbowTable) error {
+	finalChainCount := service.rainbowChainService.CountChainsForRainbowTable(rainbowTable.ID)
+	err := service.rainbowTableService.UpdateRainbowTableFinalChainCount(rainbowTable.ID, finalChainCount)
+
+	if err != nil {
+		return fmt.Errorf("failed to update final chain count for rainbow table %d: %s", rainbowTable.ID, err)
+	}
+
 	err = service.rainbowTableService.UpdateRainbowTableStatus(rainbowTable.ID, model.StatusCompleted)
 	if err != nil {
-		return fmt.Errorf("failed to update rainbow table status to %s: %s", model.StatusCompleted, err)
+		return fmt.Errorf(
+			"failed to update rainbow table status to %s for rainbow table %d: %s",
+			model.StatusCompleted,
+			rainbowTable.ID,
+			err,
+		)
 	}
 
 	return nil
+}
+
+func (service *TableGeneratorJobService) RunGenerateJobForTable(rainbowTable model.RainbowTable) error {
+	err := service.checkAndUpdateRainbowTableStatus(rainbowTable)
+	if err != nil {
+		return err
+	}
+
+	hashFunctionProvider, found := hashFunctionProvidersByName[rainbowTable.HashFunction]
+	if !found {
+		return fmt.Errorf("invalid hash function specified by rainbow table %s", rainbowTable.HashFunction)
+	}
+
+	batchesRemaining := service.calculateNumBatches(rainbowTable)
+	errorChannels := service.initializeErrorChannels()
+
+	service.spawnChainGeneratorThreads(rainbowTable, &batchesRemaining, hashFunctionProvider, errorChannels)
+	err = service.awaitChainGenerationCompletionOrErrors(rainbowTable, errorChannels)
+	if err != nil {
+		return err
+	}
+
+	return service.updateFinalChainCountAndStatus(rainbowTable)
 }

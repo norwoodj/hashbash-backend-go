@@ -13,6 +13,7 @@ type RainbowTableService interface {
 	FindRainbowTableByName(string) model.RainbowTable
 	IncrementRainbowTableChainsGenerated(int16, int64) error
 	ListRainbowTables(PageConfig) []model.RainbowTable
+	UpdateRainbowTableFinalChainCount(int16, int64) error
 	UpdateRainbowTableStatus(int16, string) error
 }
 
@@ -87,16 +88,23 @@ func (service *MySQLRainbowTableService) DeleteRainbowTableById(id int16) error 
 		Error
 }
 
+func (service *MySQLRainbowTableService) UpdateRainbowTableFinalChainCount(id int16, finalChainCount int64) error {
+	return service.databaseClient.
+		Model(&model.RainbowTable{ID: id}).
+		Update("finalChainCount", finalChainCount).
+		Error
+}
+
 func (service *MySQLRainbowTableService) UpdateRainbowTableStatus(id int16, status string) error {
 	return service.databaseClient.
 		Model(&model.RainbowTable{ID: id}).
-		Update("status = ?", status).
+		Update("status", status).
 		Error
 }
 
 func (service *MySQLRainbowTableService) IncrementRainbowTableChainsGenerated(id int16, chainsGenerated int64) error {
 	return service.databaseClient.
 		Model(&model.RainbowTable{ID: id}).
-		Update("chainsGenerated = chainsGenerated + ?", chainsGenerated).
+		Update("chainsGenerated", gorm.Expr("chainsGenerated + ?", chainsGenerated)).
 		Error
 }

@@ -11,6 +11,7 @@ import (
 
 type RainbowChainService interface {
 	CreateRainbowChains(int16, []model.RainbowChain) error
+	CountChainsForRainbowTable(int16) int64
 }
 
 type MySQLRainbowChainService struct {
@@ -37,4 +38,14 @@ func (service *MySQLRainbowChainService) CreateRainbowChains(rainbowTableId int1
 	return service.databaseClient.
 		Exec(queryBuilder.String()).
 		Error
+}
+
+func (service *MySQLRainbowChainService) CountChainsForRainbowTable(rainbowTableId int16) int64 {
+	var finalChainCount int64
+	service.databaseClient.
+		Model(&model.RainbowChain{}).
+		Where("rainbowTableId = ?", rainbowTableId).
+		Count(&finalChainCount)
+
+	return finalChainCount
 }
