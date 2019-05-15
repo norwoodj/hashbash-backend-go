@@ -3,9 +3,9 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/norwoodj/hashbash-backend-go/pkg/dao"
 	"github.com/norwoodj/hashbash-backend-go/pkg/frontend"
 	"github.com/norwoodj/hashbash-backend-go/pkg/rabbitmq"
-	"github.com/norwoodj/hashbash-backend-go/pkg/service"
 	"net/http"
 	"os"
 	"os/signal"
@@ -88,8 +88,8 @@ func hashbashWebapp(_ *cobra.Command, _ []string) {
 	log.SetLevel(logLevel)
 
 	db := database.GetConnectionOrDie()
-	rainbowTableService := service.NewRainbowTableService(db)
-	rainbowTableSearchService := service.NewRainbowTableSearchService(db)
+	rainbowTableService := dao.NewRainbowTableService(db)
+	rainbowTableSearchService := dao.NewRainbowTableSearchService(db)
 
 	connection := rabbitmq.AcquireMqConnectionOrDie()
 	defer connection.Close()

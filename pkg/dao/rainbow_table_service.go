@@ -1,8 +1,9 @@
-package service
+package dao
 
 import (
 	"github.com/jinzhu/gorm"
 	"github.com/norwoodj/hashbash-backend-go/pkg/model"
+	"time"
 )
 
 type RainbowTableService interface {
@@ -13,8 +14,9 @@ type RainbowTableService interface {
 	FindRainbowTableByName(string) model.RainbowTable
 	IncrementRainbowTableChainsGenerated(int16, int64) error
 	ListRainbowTables(PageConfig) []model.RainbowTable
-	UpdateRainbowTableFinalChainCount(int16, int64) error
 	UpdateRainbowTableStatus(int16, string) error
+	UpdateRainbowTableStatusAndFinalChainCount(int16, string, int64) error
+	UpdateRainbowTableStatusAndGenerateStarted(int16, string) error
 }
 
 type MySQLRainbowTableService struct {
@@ -88,18 +90,30 @@ func (service *MySQLRainbowTableService) DeleteRainbowTableById(id int16) error 
 		Error
 }
 
-func (service *MySQLRainbowTableService) UpdateRainbowTableFinalChainCount(id int16, finalChainCount int64) error {
-	return service.databaseClient.
-		Model(&model.RainbowTable{ID: id}).
-		Update("finalChainCount", finalChainCount).
-		Error
-}
-
 func (service *MySQLRainbowTableService) UpdateRainbowTableStatus(id int16, status string) error {
 	return service.databaseClient.
 		Model(&model.RainbowTable{ID: id}).
 		Update("status", status).
 		Error
+}
+
+func (service *MySQLRainbowTableService) UpdateRainbowTableStatusAndGenerateStarted(id int16, status string) error {
+	return service.databaseClient.
+		Model(&model.RainbowTable{ID: id}).
+		Updates(map[string]interface{}{
+			"status": status,
+			"generateStarted": time.Now(),
+		}).Error
+}
+
+func (service *MySQLRainbowTableService) UpdateRainbowTableStatusAndFinalChainCount(id int16, status string, finalChainCount int64) error {
+	return service.databaseClient.
+		Model(&model.RainbowTable{ID: id}).
+		Updates(map[string]interface{}{
+			"finalChainCount": finalChainCount,
+			"generateCompleted": time.Now(),
+			"status": status,
+		}).Error
 }
 
 func (service *MySQLRainbowTableService) IncrementRainbowTableChainsGenerated(id int16, chainsGenerated int64) error {

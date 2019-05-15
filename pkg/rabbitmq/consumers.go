@@ -1,8 +1,8 @@
 package rabbitmq
 
 import (
+	"github.com/norwoodj/hashbash-backend-go/pkg/dao"
 	"github.com/norwoodj/hashbash-backend-go/pkg/rainbow"
-	"github.com/norwoodj/hashbash-backend-go/pkg/service"
 	"github.com/norwoodj/rabbitmq-client-go/rabbitmq"
 )
 
@@ -14,7 +14,7 @@ type HashbashMqConsumerWorkers struct {
 
 func CreateConsumerWorkers(
 	connection *rabbitmq.ServerConnection,
-	rainbowTableService service.RainbowTableService,
+	rainbowTableService dao.RainbowTableService,
 	rainbowTableGenerateJobService *rainbow.TableGeneratorJobService,
 ) (HashbashMqConsumerWorkers, error) {
 	deleteRainbowTableConsumer, err0 := NewDeleteRainbowTableConsumer(connection, rainbowTableService)

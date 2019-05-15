@@ -3,15 +3,15 @@ package rabbitmq
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/norwoodj/hashbash-backend-go/pkg/dao"
 	"github.com/norwoodj/hashbash-backend-go/pkg/rainbow"
-	"github.com/norwoodj/hashbash-backend-go/pkg/service"
 	"github.com/norwoodj/rabbitmq-client-go/rabbitmq"
 	log "github.com/sirupsen/logrus"
 	"github.com/streadway/amqp"
 )
 
 type GenerateRainbowTableWorker struct {
-	rainbowTableService            service.RainbowTableService
+	rainbowTableService            dao.RainbowTableService
 	rainbowTableGenerateJobService *rainbow.TableGeneratorJobService
 }
 
@@ -23,18 +23,12 @@ func (worker *GenerateRainbowTableWorker) HandleMessage(message *amqp.Delivery) 
 	}
 
 	log.Infof("GenerateRainbowTable consumer got generate request for rainbow table %d", rainbowTableGenerateMessage.RainbowTableId)
-	rainbowTable := worker.rainbowTableService.FindRainbowTableById(rainbowTableGenerateMessage.RainbowTableId)
-
-	if rainbowTable.Name == "" {
-		return fmt.Errorf("rainbow table with ID %d not found, cannot generate", rainbowTableGenerateMessage.RainbowTableId)
-	}
-
-	return worker.rainbowTableGenerateJobService.RunGenerateJobForTable(rainbowTable)
+	return worker.rainbowTableGenerateJobService.RunGenerateJobForTable(rainbowTableGenerateMessage.RainbowTableId)
 }
 
 func NewGenerateRainbowTableConsumer(
 	connection *rabbitmq.ServerConnection,
-	rainbowTableService service.RainbowTableService,
+	rainbowTableService dao.RainbowTableService,
 	rainbowTableGenerateJobService *rainbow.TableGeneratorJobService,
 ) (*rabbitmq.Consumer, error) {
 	consumerWorker := &GenerateRainbowTableWorker{

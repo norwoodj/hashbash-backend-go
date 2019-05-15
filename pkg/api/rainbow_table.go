@@ -12,7 +12,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/gorilla/schema"
-	"github.com/norwoodj/hashbash-backend-go/pkg/service"
+	"github.com/norwoodj/hashbash-backend-go/pkg/dao"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -43,7 +43,7 @@ func rainbowTableFromRequest(generateRequest GenerateRainbowTableRequest) model.
 	}
 }
 
-func AddRainbowTableRoutes(router *mux.Router, service service.RainbowTableService, producers rabbitmq.HashbashMqProducers) {
+func AddRainbowTableRoutes(router *mux.Router, service dao.RainbowTableService, producers rabbitmq.HashbashMqProducers) {
 	router.
 		HandleFunc("/api/rainbow-table", getListRainbowTablesHandler(service)).
 		Methods("GET")
@@ -71,7 +71,7 @@ func AddRainbowTableRoutes(router *mux.Router, service service.RainbowTableServi
 		Methods("GET")
 }
 
-func getListRainbowTablesHandler(rainbowTableService service.RainbowTableService) func(writer http.ResponseWriter, request *http.Request) {
+func getListRainbowTablesHandler(rainbowTableService dao.RainbowTableService) func(writer http.ResponseWriter, request *http.Request) {
 	return func(writer http.ResponseWriter, request *http.Request) {
 		pageConfig, err := getPageConfigFromRequest(writer, request)
 		if err != nil {
@@ -86,7 +86,7 @@ func getListRainbowTablesHandler(rainbowTableService service.RainbowTableService
 	}
 }
 
-func getRainbowTableByIdHandler(rainbowTableService service.RainbowTableService) func(writer http.ResponseWriter, request *http.Request) {
+func getRainbowTableByIdHandler(rainbowTableService dao.RainbowTableService) func(writer http.ResponseWriter, request *http.Request) {
 	return func(writer http.ResponseWriter, request *http.Request) {
 		rainbowTableId, err := getIdPathParamValue("rainbowTableId", writer, request, 16)
 		if err != nil {
@@ -107,7 +107,7 @@ func getRainbowTableByIdHandler(rainbowTableService service.RainbowTableService)
 	}
 }
 
-func getCountRainbowTablesHandler(rainbowTableService service.RainbowTableService) func(writer http.ResponseWriter, request *http.Request) {
+func getCountRainbowTablesHandler(rainbowTableService dao.RainbowTableService) func(writer http.ResponseWriter, request *http.Request) {
 	return func(writer http.ResponseWriter, request *http.Request) {
 		rainbowTableCount := rainbowTableService.CountRainbowTables()
 		writer.Header().Set("Content-Type", "application/json")
@@ -118,7 +118,7 @@ func getCountRainbowTablesHandler(rainbowTableService service.RainbowTableServic
 }
 
 func handleGenerateRainbowTable(
-	rainbowTableService service.RainbowTableService,
+	rainbowTableService dao.RainbowTableService,
 	hashbashMqProducers rabbitmq.HashbashMqProducers,
 	generateRequest GenerateRainbowTableRequest,
 ) (model.RainbowTable, error) {
@@ -137,7 +137,7 @@ func handleGenerateRainbowTable(
 }
 
 func getGenerateRainbowTableFormHandler(
-	rainbowTableService service.RainbowTableService,
+	rainbowTableService dao.RainbowTableService,
 	hashbashMqProducers rabbitmq.HashbashMqProducers,
 ) func(writer http.ResponseWriter, request *http.Request) {
 	return func(writer http.ResponseWriter, request *http.Request) {
@@ -198,7 +198,7 @@ func getGenerateRainbowTableFormHandler(
 }
 
 func getGenerateRainbowTableJsonHandler(
-	rainbowTableService service.RainbowTableService,
+	rainbowTableService dao.RainbowTableService,
 	hashbashMqProducers rabbitmq.HashbashMqProducers,
 ) func(writer http.ResponseWriter, request *http.Request) {
 	return func(writer http.ResponseWriter, request *http.Request) {
@@ -233,7 +233,7 @@ func getGenerateRainbowTableJsonHandler(
 		)
 
 		if err != nil {
-			if service.IsRainbowTableExistsError(err) {
+			if dao.IsRainbowTableExistsError(err) {
 				writer.WriteHeader(http.StatusBadRequest)
 				json.NewEncoder(writer).
 					Encode(map[string]string{"error": err.Error()})
@@ -251,7 +251,7 @@ func getGenerateRainbowTableJsonHandler(
 }
 
 func deleteRainbowTableByIdHandler(
-	rainbowTableService service.RainbowTableService,
+	rainbowTableService dao.RainbowTableService,
 	hashbashMqProducers rabbitmq.HashbashMqProducers,
 ) func(writer http.ResponseWriter, request *http.Request) {
 	return func(writer http.ResponseWriter, request *http.Request) {

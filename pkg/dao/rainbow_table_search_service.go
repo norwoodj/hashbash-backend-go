@@ -1,4 +1,4 @@
-package service
+package dao
 
 import (
 	"github.com/jinzhu/gorm"
@@ -20,7 +20,8 @@ type RainbowTableSearchService interface {
 	CreateRainbowTableSearch(rainbowTableId int16, hash string) (model.RainbowTableSearch, error)
 	ListSearchesByRainbowTableId(rainbowTableId int16, includeNotFound bool, pageConfig PageConfig) []model.RainbowTableSearch
 	GetRainbowTableSearchResults(rainbowTableId int16) RainbowTableSearchResultSummary
-	FindRainbowTableSearchById(searchId int64) model.RainbowTableSearch
+	FindRainbowTableSearchById(int64) model.RainbowTableSearch
+	UpdateRainbowTableSearchStatus(int64, string) error
 }
 
 type MySQLRainbowTableSearchService struct {
@@ -119,4 +120,11 @@ func (service *MySQLRainbowTableSearchService) FindRainbowTableSearchById(search
 		First(&rainbowTableSearch)
 
 	return rainbowTableSearch
+}
+
+func (service *MySQLRainbowTableSearchService) UpdateRainbowTableSearchStatus(searchId int64, status string) error {
+	return service.databaseClient.
+		Model(&model.RainbowTableSearch{ID: searchId}).
+		Update("status", status).
+		Error
 }

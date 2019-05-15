@@ -2,14 +2,14 @@ package rabbitmq
 
 import (
 	"encoding/json"
-	"github.com/norwoodj/hashbash-backend-go/pkg/service"
+	"github.com/norwoodj/hashbash-backend-go/pkg/dao"
 	"github.com/norwoodj/rabbitmq-client-go/rabbitmq"
 	log "github.com/sirupsen/logrus"
 	"github.com/streadway/amqp"
 )
 
 type DeleteRainbowTableWorker struct {
-	rainbowTableService service.RainbowTableService
+	rainbowTableService dao.RainbowTableService
 }
 
 func (worker *DeleteRainbowTableWorker) HandleMessage(message *amqp.Delivery) error {
@@ -24,7 +24,7 @@ func (worker *DeleteRainbowTableWorker) HandleMessage(message *amqp.Delivery) er
 	err = worker.rainbowTableService.DeleteRainbowTableById(messageContent.RainbowTableId)
 
 	if err != nil {
-		if !service.IsRainbowTableNotExistsError(err) {
+		if !dao.IsRainbowTableNotExistsError(err) {
 			log.Errorf("Unknown error occurred deleting rainbow table with id %d: %s", messageContent.RainbowTableId, err)
 		}
 
@@ -36,7 +36,7 @@ func (worker *DeleteRainbowTableWorker) HandleMessage(message *amqp.Delivery) er
 
 func NewDeleteRainbowTableConsumer(
 	connection *rabbitmq.ServerConnection,
-	rainbowTableService service.RainbowTableService,
+	rainbowTableService dao.RainbowTableService,
 ) (*rabbitmq.Consumer, error) {
 	consumerWorker := &DeleteRainbowTableWorker{rainbowTableService: rainbowTableService}
 	return rabbitmq.NewConsumer(

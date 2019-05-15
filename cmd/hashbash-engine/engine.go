@@ -6,10 +6,10 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/norwoodj/hashbash-backend-go/pkg/dao"
 	"github.com/norwoodj/hashbash-backend-go/pkg/database"
 	"github.com/norwoodj/hashbash-backend-go/pkg/rabbitmq"
 	"github.com/norwoodj/hashbash-backend-go/pkg/rainbow"
-	"github.com/norwoodj/hashbash-backend-go/pkg/service"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -49,13 +49,13 @@ func hashbashEngine(_ *cobra.Command, _ []string) {
 	log.SetLevel(logLevel)
 
 	db := database.GetConnectionOrDie()
-	rainbowTableService := service.NewRainbowTableService(db)
-	rainbowChainService := service.NewRainbowChainService(db)
-	//rainbowTableSearchService := service.NewRainbowTableSearchService(db)
+	rainbowTableService := dao.NewRainbowTableService(db)
+	rainbowChainService := dao.NewRainbowChainService(db)
+	//rainbowTableSearchService := dao.NewRainbowTableSearchService(db)
 
 	jobConfig := rainbow.TableGenerateJobConfig{
 		ChainBatchSize: viper.GetInt64("generate-batch-size"),
-		NumThreads: viper.GetInt("generate-num-threads"),
+		NumThreads:     viper.GetInt("generate-num-threads"),
 	}
 
 	rainbowTableGenerateJobService := rainbow.NewTableGeneratorJobService(rainbowChainService, rainbowTableService, jobConfig)

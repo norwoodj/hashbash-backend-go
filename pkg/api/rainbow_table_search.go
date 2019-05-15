@@ -6,14 +6,14 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"github.com/norwoodj/hashbash-backend-go/pkg/dao"
 	"github.com/norwoodj/hashbash-backend-go/pkg/rabbitmq"
-	"github.com/norwoodj/hashbash-backend-go/pkg/service"
 	log "github.com/sirupsen/logrus"
 )
 
 func AddRainbowTableSearchRoutes(
 	router *mux.Router,
-	rainbowTableSearchService service.RainbowTableSearchService,
+	rainbowTableSearchService dao.RainbowTableSearchService,
 	hashbashMqProducers rabbitmq.HashbashMqProducers,
 ) {
 	router.
@@ -37,7 +37,7 @@ func AddRainbowTableSearchRoutes(
 		Methods("POST")
 }
 
-func getRainbowTableSearchesByIdHandler(rainbowTableSearchService service.RainbowTableSearchService) func(writer http.ResponseWriter, request *http.Request) {
+func getRainbowTableSearchesByIdHandler(rainbowTableSearchService dao.RainbowTableSearchService) func(writer http.ResponseWriter, request *http.Request) {
 	return func(writer http.ResponseWriter, request *http.Request) {
 		rainbowTableId, err := getIdPathParamValue("rainbowTableId", writer, request, 16)
 		if err != nil {
@@ -58,7 +58,7 @@ func getRainbowTableSearchesByIdHandler(rainbowTableSearchService service.Rainbo
 	}
 }
 
-func getCountRainbowTableSearchesHandler(rainbowTableSearchService service.RainbowTableSearchService) func(writer http.ResponseWriter, request *http.Request) {
+func getCountRainbowTableSearchesHandler(rainbowTableSearchService dao.RainbowTableSearchService) func(writer http.ResponseWriter, request *http.Request) {
 	return func(writer http.ResponseWriter, request *http.Request) {
 		rainbowTableId, err := getIdPathParamValue("rainbowTableId", writer, request, 16)
 		if err != nil {
@@ -74,7 +74,7 @@ func getCountRainbowTableSearchesHandler(rainbowTableSearchService service.Rainb
 	}
 }
 
-func getRainbowTableSearchResultsHandler(rainbowTableSearchService service.RainbowTableSearchService) func(writer http.ResponseWriter, request *http.Request) {
+func getRainbowTableSearchResultsHandler(rainbowTableSearchService dao.RainbowTableSearchService) func(writer http.ResponseWriter, request *http.Request) {
 	return func(writer http.ResponseWriter, request *http.Request) {
 		rainbowTableId, err := getIdPathParamValue("rainbowTableId", writer, request, 16)
 		if err != nil {
@@ -89,7 +89,7 @@ func getRainbowTableSearchResultsHandler(rainbowTableSearchService service.Rainb
 	}
 }
 
-func getRainbowTableSearchByIdHandler(rainbowTableSearchService service.RainbowTableSearchService) func(writer http.ResponseWriter, request *http.Request) {
+func getRainbowTableSearchByIdHandler(rainbowTableSearchService dao.RainbowTableSearchService) func(writer http.ResponseWriter, request *http.Request) {
 	return func(writer http.ResponseWriter, request *http.Request) {
 		rainbowTableSearchId, err := getIdPathParamValue("searchId", writer, request, 64)
 		if err != nil {
@@ -105,7 +105,7 @@ func getRainbowTableSearchByIdHandler(rainbowTableSearchService service.RainbowT
 }
 
 func createRainbowTableSearchByIdHandler(
-	rainbowTableSearchService service.RainbowTableSearchService,
+	rainbowTableSearchService dao.RainbowTableSearchService,
 	hashbashMqProducers rabbitmq.HashbashMqProducers,
 ) func(writer http.ResponseWriter, request *http.Request) {
 	return func(writer http.ResponseWriter, request *http.Request) {
@@ -135,7 +135,7 @@ func createRainbowTableSearchByIdHandler(
 		)
 
 		if err != nil {
-			if service.IsRainbowTableNotExistsError(err) || service.IsInvalidHashError(err) {
+			if dao.IsRainbowTableNotExistsError(err) || dao.IsInvalidHashError(err) {
 				writer.Header().Set("Content-Type", "application/json")
 				writer.WriteHeader(http.StatusBadRequest)
 				json.

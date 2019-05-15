@@ -6,8 +6,8 @@ import (
 	"strings"
 	"sync/atomic"
 
+	"github.com/norwoodj/hashbash-backend-go/pkg/dao"
 	"github.com/norwoodj/hashbash-backend-go/pkg/model"
-	"github.com/norwoodj/hashbash-backend-go/pkg/service"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -18,13 +18,13 @@ type TableGenerateJobConfig struct {
 
 type TableGeneratorJobService struct {
 	jobConfig           TableGenerateJobConfig
-	rainbowTableService service.RainbowTableService
-	rainbowChainService service.RainbowChainService
+	rainbowTableService dao.RainbowTableService
+	rainbowChainService dao.RainbowChainService
 }
 
 func NewTableGeneratorJobService(
-	rainbowChainService service.RainbowChainService,
-	rainbowTableService service.RainbowTableService,
+	rainbowChainService dao.RainbowChainService,
+	rainbowTableService dao.RainbowTableService,
 	jobConfig TableGenerateJobConfig,
 ) *TableGeneratorJobService {
 	return &TableGeneratorJobService{
@@ -82,7 +82,7 @@ func (service *TableGeneratorJobService) checkAndUpdateRainbowTableStatus(rainbo
 		return fmt.Errorf("cannot generate a rainbow table that is not in the %s state", model.StatusQueued)
 	}
 
-	err := service.rainbowTableService.UpdateRainbowTableStatus(rainbowTable.ID, model.StatusStarted)
+	err := service.rainbowTableService.UpdateRainbowTableStatusAndGenerateStarted(rainbowTable.ID, model.StatusStarted)
 	if err != nil {
 		return fmt.Errorf("failed to update rainbow table status to %s: %s", model.StatusStarted, err)
 	}
@@ -93,7 +93,7 @@ func (service *TableGeneratorJobService) checkAndUpdateRainbowTableStatus(rainbo
 func (service *TableGeneratorJobService) calculateNumBatches(rainbowTable model.RainbowTable) int64 {
 	batchesRemaining := rainbowTable.NumChains / service.jobConfig.ChainBatchSize
 
-	if rainbowTable.NumChains % service.jobConfig.ChainBatchSize > 0 {
+	if rainbowTable.NumChains%service.jobConfig.ChainBatchSize > 0 {
 		batchesRemaining += 1
 	}
 
@@ -162,13 +162,12 @@ func (service *TableGeneratorJobService) awaitChainGenerationCompletionOrErrors(
 
 func (service *TableGeneratorJobService) updateFinalChainCountAndStatus(rainbowTable model.RainbowTable) error {
 	finalChainCount := service.rainbowChainService.CountChainsForRainbowTable(rainbowTable.ID)
-	err := service.rainbowTableService.UpdateRainbowTableFinalChainCount(rainbowTable.ID, finalChainCount)
+	err := service.rainbowTableService.UpdateRainbowTableStatusAndFinalChainCount(
+		rainbowTable.ID,
+		model.StatusCompleted,
+		finalChainCount,
+	)
 
-	if err != nil {
-		return fmt.Errorf("failed to update final chain count for rainbow table %d: %s", rainbowTable.ID, err)
-	}
-
-	err = service.rainbowTableService.UpdateRainbowTableStatus(rainbowTable.ID, model.StatusCompleted)
 	if err != nil {
 		return fmt.Errorf(
 			"failed to update rainbow table status to %s for rainbow table %d: %s",
@@ -181,7 +180,13 @@ func (service *TableGeneratorJobService) updateFinalChainCountAndStatus(rainbowT
 	return nil
 }
 
-func (service *TableGeneratorJobService) RunGenerateJobForTable(rainbowTable model.RainbowTable) error {
+func (service *TableGeneratorJobService) RunGenerateJobForTable(rainbowTableId int16) error {
+	rainbowTable := service.rainbowTableService.FindRainbowTableById(rainbowTableId)
+
+	if rainbowTable.Name == "" {
+		return fmt.Errorf("rainbow table with ID %d not found, cannot generate", rainbowTableId)
+	}
+
 	err := service.checkAndUpdateRainbowTableStatus(rainbowTable)
 	if err != nil {
 		return err
