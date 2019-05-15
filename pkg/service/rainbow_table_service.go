@@ -10,8 +10,16 @@ type RainbowTableExistsError struct {
 	Name string
 }
 
+type RainbowTableNotExistsError struct {
+	ID int16
+}
+
 func (err RainbowTableExistsError) Error() string {
 	return fmt.Sprintf("Rainbow table with name %s already exists!", err.Name)
+}
+
+func (err RainbowTableNotExistsError) Error() string {
+	return fmt.Sprintf("No rainbow table with id %d already exists!", err.ID)
 }
 
 func IsRainbowTableExistsError(err error) bool {
@@ -25,12 +33,24 @@ func IsRainbowTableExistsError(err error) bool {
 	return false
 }
 
+func IsRainbowTableNotExistsError(err error) bool {
+	if err != nil {
+		switch err.(type) {
+		case RainbowTableNotExistsError:
+			return true
+		}
+	}
+
+	return false
+}
+
 type RainbowTableService interface {
 	CountRainbowTables() int64
 	CreateRainbowTable(*model.RainbowTable) (*model.RainbowTable, error)
 	ListRainbowTables(PageConfig) []model.RainbowTable
 	FindRainbowTableById(int16) model.RainbowTable
 	FindRainbowTableByName(string) model.RainbowTable
+	DeleteRainbowTableById(int16) error
 }
 
 type MySQLRainbowTableService struct {
@@ -87,4 +107,19 @@ func (service MySQLRainbowTableService) FindRainbowTableByName(name string) mode
 		First(&rainbowTable)
 
 	return rainbowTable
+}
+
+func (service MySQLRainbowTableService) DeleteRainbowTableById(id int16) error {
+	var rainbowTable model.RainbowTable
+	service.databaseClient.
+		Where("id = ?", id).
+		First(&rainbowTable)
+
+	if rainbowTable.Name == "" {
+		return RainbowTableNotExistsError{ID: id}
+	}
+
+	return service.databaseClient.
+		Delete(rainbowTable).
+		Error
 }

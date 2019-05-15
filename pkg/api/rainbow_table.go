@@ -49,14 +49,6 @@ func AddRainbowTableRoutes(router *mux.Router, service service.RainbowTableServi
 		Methods("GET")
 
 	router.
-		HandleFunc("/api/rainbow-table/{rainbowTableId:[0-9]+}", getRainbowTableByIdHandler(service)).
-		Methods("GET")
-
-	router.
-		HandleFunc("/api/rainbow-table/count", getCountRainbowTablesHandler(service)).
-		Methods("GET")
-
-	router.
 		HandleFunc("/api/rainbow-table", getGenerateRainbowTableFormHandler(service, producers)).
 		Headers("Content-Type", "application/x-www-form-urlencoded").
 		Methods("POST")
@@ -65,6 +57,18 @@ func AddRainbowTableRoutes(router *mux.Router, service service.RainbowTableServi
 		HandleFunc("/api/rainbow-table", getGenerateRainbowTableJsonHandler(service, producers)).
 		Headers("Content-Type", "application/json").
 		Methods("POST")
+
+	router.
+		HandleFunc("/api/rainbow-table/{rainbowTableId:[0-9]+}", getRainbowTableByIdHandler(service)).
+		Methods("GET")
+
+	router.
+		HandleFunc("/api/rainbow-table/{rainbowTableId:[0-9]+}", deleteRainbowTableByIdHandler(service, producers)).
+		Methods("DELETE")
+
+	router.
+		HandleFunc("/api/rainbow-table/count", getCountRainbowTablesHandler(service)).
+		Methods("GET")
 }
 
 func getListRainbowTablesHandler(rainbowTableService service.RainbowTableService) func(writer http.ResponseWriter, request *http.Request) {
@@ -127,7 +131,7 @@ func handleGenerateRainbowTable(
 
 	log.Infof("Created rainbow table %s with id %d. Publishing request for generation...", rainbowTable.Name, rainbowTable.ID)
 	err = hashbashMqProducers.GenerateRainbowTableProducer.
-		PublishMessage(rabbitmq.RainbowTableMessage{RainbowTableId: rainbowTable.ID})
+		PublishMessage(rabbitmq.RainbowTableIdMessage{RainbowTableId: rainbowTable.ID})
 
 	return rainbowTable, err
 }
@@ -244,6 +248,35 @@ func getGenerateRainbowTableJsonHandler(
 
 		writer.Header().Set("Location", fmt.Sprintf("/api/rainbow-table/%d", rainbowTable.ID))
 		writer.WriteHeader(http.StatusCreated)
-		writer.Header()
+	}
+}
+
+func deleteRainbowTableByIdHandler(
+	rainbowTableService service.RainbowTableService,
+	hashbashMqProducers rabbitmq.HashbashMqProducers,
+) func(writer http.ResponseWriter, request *http.Request) {
+	return func(writer http.ResponseWriter, request *http.Request) {
+		rainbowTableId, err := getIdPathParamValue("rainbowTableId", writer, request, 16)
+		if err != nil {
+			return
+		}
+
+		rainbowTable := rainbowTableService.FindRainbowTableById(convertRainbowTableId(rainbowTableId))
+		if rainbowTable.Name == "" {
+			writer.WriteHeader(http.StatusNotFound)
+			return
+		}
+
+		err = hashbashMqProducers.DeleteRainbowTableProducer.
+			PublishMessage(rabbitmq.RainbowTableIdMessage{RainbowTableId: rainbowTable.ID})
+
+		if err != nil {
+			log.Errorf("Failed to publish deleteRainbowTable request: %s", err)
+			writer.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		writer.Header().Set("Location", fmt.Sprintf("/api/rainbow-table/%d", rainbowTable.ID))
+		writer.WriteHeader(http.StatusNoContent)
 	}
 }

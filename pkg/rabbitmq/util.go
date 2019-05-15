@@ -14,7 +14,6 @@ const generateRainbowTableRoutingKey = "generateRainbowTable"
 const deleteRainbowTableRoutingKey = "deleteRainbowTable"
 const searchRainbowTableRoutingKey = "searchRainbowTable"
 
-
 func AddRabbitMqFlags(flags *pflag.FlagSet) {
 	flags.StringP("rabbitmq-host", "r", "localhost", "The hostname or IP address of the hashbash rabbitmq server")
 	flags.StringP("rabbitmq-username", "n", "guest", "The username with which to authenticate to the rabbitmq server")

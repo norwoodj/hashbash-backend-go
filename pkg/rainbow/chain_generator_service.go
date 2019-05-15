@@ -6,18 +6,18 @@ import (
 )
 
 type chainGeneratorService struct {
-    hashFunction            hashFunction
-    reductionFunctionFamily reductionFunctionFamily
+	hashFunction            hashFunction
+	reductionFunctionFamily reductionFunctionFamily
 }
 
 func newChainGeneratorService(
-    hashFunction hashFunction,
-    reductionFunctionFamily reductionFunctionFamily,
+	hashFunction hashFunction,
+	reductionFunctionFamily reductionFunctionFamily,
 ) *chainGeneratorService {
-    return &chainGeneratorService{
-        hashFunction:            hashFunction,
-        reductionFunctionFamily: reductionFunctionFamily,
-    }
+	return &chainGeneratorService{
+		hashFunction:            hashFunction,
+		reductionFunctionFamily: reductionFunctionFamily,
+	}
 }
 
 func (service *chainGeneratorService) generateRainbowChainLinkFromHash(
@@ -27,7 +27,7 @@ func (service *chainGeneratorService) generateRainbowChainLinkFromHash(
 ) rainbowChainLink {
 	if numLinks > 0 {
 		plaintext := service.reductionFunctionFamily(digest, nextChainIndex)
-		return service.generateRainbowChainLinkFromPlaintext(plaintext, nextChainIndex + 1, numLinks)
+		return service.generateRainbowChainLinkFromPlaintext(plaintext, nextChainIndex+1, numLinks)
 	}
 
 	return rainbowChainLink{hashedPlaintext: digest}
@@ -39,15 +39,15 @@ func (service *chainGeneratorService) generateRainbowChainLinkFromPlaintext(
 	numLinks int,
 ) rainbowChainLink {
 	// Hash the plaintext, generating the first link
-    chainLink := rainbowChainLink{
+	chainLink := rainbowChainLink{
 		plaintext:       plaintext,
 		hashedPlaintext: service.hashFunction.apply(plaintext),
 	}
 
 	// From this link to the end of the chain
-	for i := 0; i < numLinks - 1; i++ {
+	for i := 0; i < numLinks-1; i++ {
 		// Hash the current key, then reduce it to the next key
-		reducedPlaintext := service.reductionFunctionFamily(chainLink.hashedPlaintext, nextChainIndex + i)
+		reducedPlaintext := service.reductionFunctionFamily(chainLink.hashedPlaintext, nextChainIndex+i)
 		hashedDigest := service.hashFunction.apply(reducedPlaintext)
 
 		chainLink.plaintext = reducedPlaintext
@@ -61,6 +61,6 @@ func (service *chainGeneratorService) generateRainbowChain(startPlaintext string
 	endingLink := service.generateRainbowChainLinkFromPlaintext(startPlaintext, 0, chainLength)
 	return model.RainbowChain{
 		StartPlaintext: startPlaintext,
-		EndHash: fmt.Sprintf("%x", endingLink.hashedPlaintext),
+		EndHash:        fmt.Sprintf("%x", endingLink.hashedPlaintext),
 	}
 }

@@ -1,6 +1,6 @@
 package rainbow
 
 type rainbowChainLink struct {
-	plaintext string
+	plaintext       string
 	hashedPlaintext []byte
 }

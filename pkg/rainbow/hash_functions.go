@@ -10,8 +10,8 @@ import (
 )
 
 const (
-	MD5 = "MD5"
-	SHA1 = "SHA1"
+	MD5    = "MD5"
+	SHA1   = "SHA1"
 	SHA256 = "SHA256"
 	SHA384 = "SHA384"
 	SHA512 = "SHA512"
@@ -37,8 +37,8 @@ func (hf hashFunction) apply(plaintext string) []byte {
 }
 
 var HashFunctionProvidersByName = map[string]hashFunctionProvider{
-	MD5: {newFunc: md5.New},
-	SHA1: {newFunc: sha1.New},
+	MD5:    {newFunc: md5.New},
+	SHA1:   {newFunc: sha1.New},
 	SHA256: {newFunc: sha256.New},
 	SHA384: {newFunc: sha512.New384},
 	SHA512: {newFunc: sha512.New},

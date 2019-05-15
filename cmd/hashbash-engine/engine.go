@@ -6,7 +6,9 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/norwoodj/hashbash-backend-go/pkg/database"
 	"github.com/norwoodj/hashbash-backend-go/pkg/rabbitmq"
+	"github.com/norwoodj/hashbash-backend-go/pkg/service"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -45,14 +47,14 @@ func hashbashEngine(_ *cobra.Command, _ []string) {
 	logLevel, _ := log.ParseLevel(viper.GetString("log-level"))
 	log.SetLevel(logLevel)
 
-	//db := database.GetConnectionOrDie()
-	//rainbowTableService := service.NewRainbowTableService(db)
+	db := database.GetConnectionOrDie()
+	rainbowTableService := service.NewRainbowTableService(db)
 	//rainbowTableSearchService := service.NewRainbowTableSearchService(db)
 
 	connection := rabbitmq.AcquireMqConnectionOrDie()
 	defer connection.Close()
 
-	hashbashConsumers, err := rabbitmq.CreateConsumerWorkers(connection)
+	hashbashConsumers, err := rabbitmq.CreateConsumerWorkers(connection, rainbowTableService)
 	if err != nil {
 		log.Errorf("Failed to instantiate rabbitmq consumers: %s", err)
 		os.Exit(1)
