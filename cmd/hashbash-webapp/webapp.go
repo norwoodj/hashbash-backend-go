@@ -111,7 +111,7 @@ func hashbashWebapp(_ *cobra.Command, _ []string) {
 	}
 
 	api.AddRainbowTableRoutes(router, rainbowTableService, hashbashProducers)
-	api.AddRainbowTableSearchRoutes(router, rainbowTableSearchService)
+	api.AddRainbowTableSearchRoutes(router, rainbowTableSearchService, hashbashProducers)
 
 	frontendTemplatesDir := viper.GetString("frontend-template-path")
 	err = frontend.RegisterTemplateHandler(router, frontendTemplatesDir)

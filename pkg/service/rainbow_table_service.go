@@ -1,48 +1,9 @@
 package service
 
 import (
-	"fmt"
 	"github.com/jinzhu/gorm"
 	"github.com/norwoodj/hashbash-backend-go/pkg/model"
 )
-
-type RainbowTableExistsError struct {
-	Name string
-}
-
-type RainbowTableNotExistsError struct {
-	ID int16
-}
-
-func (err RainbowTableExistsError) Error() string {
-	return fmt.Sprintf("Rainbow table with name %s already exists!", err.Name)
-}
-
-func (err RainbowTableNotExistsError) Error() string {
-	return fmt.Sprintf("No rainbow table with id %d already exists!", err.ID)
-}
-
-func IsRainbowTableExistsError(err error) bool {
-	if err != nil {
-		switch err.(type) {
-		case RainbowTableExistsError:
-			return true
-		}
-	}
-
-	return false
-}
-
-func IsRainbowTableNotExistsError(err error) bool {
-	if err != nil {
-		switch err.(type) {
-		case RainbowTableNotExistsError:
-			return true
-		}
-	}
-
-	return false
-}
 
 type RainbowTableService interface {
 	CountRainbowTables() int64

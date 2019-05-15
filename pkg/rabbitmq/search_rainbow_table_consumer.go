@@ -1,6 +1,7 @@
 package rabbitmq
 
 import (
+	"encoding/json"
 	"github.com/norwoodj/rabbitmq-client-go/rabbitmq"
 	log "github.com/sirupsen/logrus"
 	"github.com/streadway/amqp"
@@ -9,7 +10,20 @@ import (
 type SearchRainbowTableWorker struct{}
 
 func (worker *SearchRainbowTableWorker) HandleMessage(message *amqp.Delivery) error {
-	log.Infof("SearchRainbowTableConsumer got message: %+v", message)
+	var messageContent RainbowTableSearchRequestMessage
+	err := json.Unmarshal(message.Body, &messageContent)
+
+	if err != nil {
+		log.Errorf("Failed to deserialize rainbow table search request message: %s", err)
+		return err
+	}
+
+	log.Infof(
+		"SearchRainbowTable consumer got request to search rainbow table %d for hash %s",
+		messageContent.RainbowTableId,
+		messageContent.Hash,
+	)
+
 	return nil
 }
 

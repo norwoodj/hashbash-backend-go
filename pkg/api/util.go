@@ -40,7 +40,7 @@ func getIdPathParamValue(
 	writer http.ResponseWriter,
 	request *http.Request,
 	bitSize int,
-) (interface{}, error) {
+) (int64, error) {
 	vars := mux.Vars(request)
 	id, err := strconv.ParseInt(vars[idParamName], 10, bitSize)
 
