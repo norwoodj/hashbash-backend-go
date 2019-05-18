@@ -12,6 +12,7 @@ require (
 	github.com/jinzhu/now v1.0.0 // indirect
 	github.com/kr/pretty v0.1.0 // indirect
 	github.com/mattn/go-runewidth v0.0.4 // indirect
+	github.com/meirf/gopart v0.0.0-20180520194036-37e9492a85a8
 	github.com/norwoodj/rabbitmq-client-go v0.2.0
 	github.com/olekukonko/tablewriter v0.0.1
 	github.com/sirupsen/logrus v1.4.1

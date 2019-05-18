@@ -3,7 +3,6 @@ package main
 import (
 	"strings"
 
-	"github.com/norwoodj/hashbash-backend-go/pkg/database"
 	"github.com/norwoodj/hashbash-backend-go/pkg/util"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -16,9 +15,7 @@ func newRootCommand() *cobra.Command {
 	}
 
 	util.AddDefaultFlags(rootCmd.PersistentFlags())
-	database.AddDatabaseFlags(rootCmd.PersistentFlags())
-
-	rootCmd.AddCommand(newListSubcommand())
+	rootCmd.AddCommand(newSearchSubcommand())
 
 	viper.AutomaticEnv()
 	viper.SetEnvPrefix("HASHBASH")

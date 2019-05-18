@@ -6,12 +6,12 @@ import (
 )
 
 type chainGeneratorService struct {
-	hashFunction            hashFunction
+	hashFunction            HashFunction
 	reductionFunctionFamily reductionFunctionFamily
 }
 
 func newChainGeneratorService(
-	hashFunction hashFunction,
+	hashFunction HashFunction,
 	reductionFunctionFamily reductionFunctionFamily,
 ) *chainGeneratorService {
 	return &chainGeneratorService{
@@ -41,14 +41,14 @@ func (service *chainGeneratorService) generateRainbowChainLinkFromPlaintext(
 	// Hash the plaintext, generating the first link
 	chainLink := rainbowChainLink{
 		plaintext:       plaintext,
-		hashedPlaintext: service.hashFunction.apply(plaintext),
+		hashedPlaintext: service.hashFunction.Apply(plaintext),
 	}
 
 	// From this link to the end of the chain
 	for i := 0; i < numLinks-1; i++ {
 		// Hash the current key, then reduce it to the next key
 		reducedPlaintext := service.reductionFunctionFamily(chainLink.hashedPlaintext, nextChainIndex+i)
-		hashedDigest := service.hashFunction.apply(reducedPlaintext)
+		hashedDigest := service.hashFunction.Apply(reducedPlaintext)
 
 		chainLink.plaintext = reducedPlaintext
 		chainLink.hashedPlaintext = hashedDigest

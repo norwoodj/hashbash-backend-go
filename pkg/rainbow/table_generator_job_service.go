@@ -2,12 +2,11 @@ package rainbow
 
 import (
 	"fmt"
-	"math/rand"
-	"strings"
 	"sync/atomic"
 
 	"github.com/norwoodj/hashbash-backend-go/pkg/dao"
 	"github.com/norwoodj/hashbash-backend-go/pkg/model"
+	"github.com/norwoodj/hashbash-backend-go/pkg/util"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -22,28 +21,16 @@ type TableGeneratorJobService struct {
 	rainbowChainService dao.RainbowChainService
 }
 
-func NewTableGeneratorJobService(
+func NewRainbowTableGeneratorJobService(
+	jobConfig TableGenerateJobConfig,
 	rainbowChainService dao.RainbowChainService,
 	rainbowTableService dao.RainbowTableService,
-	jobConfig TableGenerateJobConfig,
 ) *TableGeneratorJobService {
 	return &TableGeneratorJobService{
 		jobConfig:           jobConfig,
 		rainbowChainService: rainbowChainService,
 		rainbowTableService: rainbowTableService,
 	}
-}
-
-func randomString(characterSet *string, stringLength int64) string {
-	stringBuilder := strings.Builder{}
-	characterSetSize := len(*characterSet)
-	var i int64
-	for i = 0; i < stringLength; i++ {
-		index := rand.Intn(characterSetSize)
-		stringBuilder.WriteByte((*characterSet)[index])
-	}
-
-	return stringBuilder.String()
 }
 
 func (service *TableGeneratorJobService) runChainGeneratorThread(
@@ -59,7 +46,7 @@ func (service *TableGeneratorJobService) runChainGeneratorThread(
 
 	for atomic.AddInt64(batchesRemaining, -1) >= 0 {
 		for i := 0; i < int(service.jobConfig.ChainBatchSize); i++ {
-			startPlaintext := randomString(&rainbowTable.CharacterSet, rainbowTable.PasswordLength)
+			startPlaintext := util.RandomString(&rainbowTable.CharacterSet, rainbowTable.PasswordLength)
 			chainList[i] = chainGeneratorService.generateRainbowChain(startPlaintext, chainLength)
 		}
 
@@ -100,32 +87,23 @@ func (service *TableGeneratorJobService) calculateNumBatches(rainbowTable model.
 	return batchesRemaining
 }
 
-func (service *TableGeneratorJobService) initializeErrorChannels() []chan error {
-	errorChannels := make([]chan error, service.jobConfig.NumThreads)
-
-	for i := range errorChannels {
-		errorChannels[i] = make(chan error)
-	}
-
-	return errorChannels
-}
-
 func (service *TableGeneratorJobService) spawnChainGeneratorThreads(
 	rainbowTable model.RainbowTable,
-	batchesRemaining *int64,
-	hashFunctionProvider hashFunctionProvider,
+	hashFunctionProvider HashFunctionProvider,
 	errorChannels []chan error,
 ) {
+	batchesRemaining := service.calculateNumBatches(rainbowTable)
+
 	for i := 0; i < service.jobConfig.NumThreads; i++ {
 		chainGeneratorService := newChainGeneratorService(
-			hashFunctionProvider.newHashFunction(),
+			hashFunctionProvider.NewHashFunction(),
 			getDefaultReductionFunctionFamily(int(rainbowTable.PasswordLength), rainbowTable.CharacterSet),
 		)
 
 		go service.runChainGeneratorThread(
 			rainbowTable,
 			chainGeneratorService,
-			batchesRemaining,
+			&batchesRemaining,
 			errorChannels[i],
 		)
 	}
@@ -192,15 +170,14 @@ func (service *TableGeneratorJobService) RunGenerateJobForTable(rainbowTableId i
 		return err
 	}
 
-	hashFunctionProvider, found := hashFunctionProvidersByName[rainbowTable.HashFunction]
-	if !found {
-		return fmt.Errorf("invalid hash function specified by rainbow table %s", rainbowTable.HashFunction)
+	hashFunctionProvider, err := GetHashFunctionProvider(rainbowTable.HashFunction)
+	if err != nil {
+		return err
 	}
 
-	batchesRemaining := service.calculateNumBatches(rainbowTable)
-	errorChannels := service.initializeErrorChannels()
+	errorChannels := initializeErrorChannels(service.jobConfig.NumThreads)
+	service.spawnChainGeneratorThreads(rainbowTable, hashFunctionProvider, errorChannels)
 
-	service.spawnChainGeneratorThreads(rainbowTable, &batchesRemaining, hashFunctionProvider, errorChannels)
 	err = service.awaitChainGenerationCompletionOrErrors(rainbowTable, errorChannels)
 	if err != nil {
 		return err

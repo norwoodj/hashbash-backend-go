@@ -35,6 +35,22 @@ func getIntQueryParamValue(
 	return parsedValue, nil
 }
 
+func getStringQueryParamValue(
+	queryParameters url.Values,
+	parameter string,
+	writer http.ResponseWriter,
+) string {
+	value := queryParameters.Get(parameter)
+
+	if value == "" {
+		writer.WriteHeader(http.StatusBadRequest)
+		writer.Write([]byte(fmt.Sprintf("Failed to parse string query parameter %s: %s", parameter, value)))
+		return ""
+	}
+
+	return value
+}
+
 func getIdPathParamValue(
 	idParamName string,
 	writer http.ResponseWriter,

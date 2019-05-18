@@ -2,7 +2,6 @@ package api
 
 import (
 	"encoding/json"
-	"io/ioutil"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -114,24 +113,15 @@ func createRainbowTableSearchByIdHandler(
 			return
 		}
 
-		requestBody, err := ioutil.ReadAll(request.Body)
-		if err != nil {
-			log.Warnf("Failed to read request body: %s", err)
-			writer.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-
-		var searchRequest rainbowTableSearchRequest
-		err = json.Unmarshal(requestBody, &searchRequest)
-		if err != nil {
-			log.Warnf("Failed to unmarshal rainbow table search request: %s", err)
-			writer.WriteHeader(http.StatusInternalServerError)
-			return
-		}
+		hash := getStringQueryParamValue(
+			request.URL.Query(),
+			"hash",
+			writer,
+		)
 
 		rainbowTableSearch, err := rainbowTableSearchService.CreateRainbowTableSearch(
 			int16(rainbowTableId),
-			searchRequest.Hash,
+			hash,
 		)
 
 		if err != nil {
@@ -150,7 +140,7 @@ func createRainbowTableSearchByIdHandler(
 		}
 
 		searchRequestMessage := rabbitmq.RainbowTableSearchRequestMessage{
-			Hash:           searchRequest.Hash,
+			Hash:           hash,
 			RainbowTableId: int16(rainbowTableId),
 			SearchId:       rainbowTableSearch.ID,
 		}

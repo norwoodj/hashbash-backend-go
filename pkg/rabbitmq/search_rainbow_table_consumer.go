@@ -2,12 +2,16 @@ package rabbitmq
 
 import (
 	"encoding/json"
+
+	"github.com/norwoodj/hashbash-backend-go/pkg/rainbow"
 	"github.com/norwoodj/rabbitmq-client-go/rabbitmq"
 	log "github.com/sirupsen/logrus"
 	"github.com/streadway/amqp"
 )
 
-type SearchRainbowTableWorker struct{}
+type SearchRainbowTableWorker struct {
+	rainbowTableSearchJobService *rainbow.TableSearchJobService
+}
 
 func (worker *SearchRainbowTableWorker) HandleMessage(message *amqp.Delivery) error {
 	var messageContent RainbowTableSearchRequestMessage
@@ -24,11 +28,14 @@ func (worker *SearchRainbowTableWorker) HandleMessage(message *amqp.Delivery) er
 		messageContent.Hash,
 	)
 
-	return nil
+	return worker.rainbowTableSearchJobService.RunSearchJob(messageContent.SearchId)
 }
 
-func NewSearchRainbowTableConsumer(connection *rabbitmq.ServerConnection) (*rabbitmq.Consumer, error) {
-	consumerWorker := &SearchRainbowTableWorker{}
+func NewSearchRainbowTableConsumer(
+	connection *rabbitmq.ServerConnection,
+	rainbowTableSearchJobService *rainbow.TableSearchJobService,
+) (*rabbitmq.Consumer, error) {
+	consumerWorker := &SearchRainbowTableWorker{rainbowTableSearchJobService: rainbowTableSearchJobService}
 	return rabbitmq.NewConsumer(
 		connection,
 		consumerWorker,

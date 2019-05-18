@@ -12,6 +12,7 @@ import (
 type RainbowChainService interface {
 	CreateRainbowChains(int16, []model.RainbowChain) error
 	CountChainsForRainbowTable(int16) int64
+	FindChainByTableIdAndEndHashIn(int16, []string) model.RainbowChain
 }
 
 type MySQLRainbowChainService struct {
@@ -48,4 +49,13 @@ func (service *MySQLRainbowChainService) CountChainsForRainbowTable(rainbowTable
 		Count(&finalChainCount)
 
 	return finalChainCount
+}
+
+func (service *MySQLRainbowChainService) FindChainByTableIdAndEndHashIn(rainbowTableId int16, endHashes []string) model.RainbowChain {
+	var rainbowChain model.RainbowChain
+	service.databaseClient.
+		Where("rainbowTableId = ? AND endHash IN (?)", rainbowTableId, endHashes).
+		Take(&rainbowChain)
+
+	return rainbowChain
 }

@@ -3,6 +3,7 @@ package dao
 import (
 	"github.com/jinzhu/gorm"
 	"github.com/norwoodj/hashbash-backend-go/pkg/model"
+	"time"
 )
 
 type RainbowTableSearchResults struct {
@@ -22,6 +23,8 @@ type RainbowTableSearchService interface {
 	GetRainbowTableSearchResults(rainbowTableId int16) RainbowTableSearchResultSummary
 	FindRainbowTableSearchById(int64) model.RainbowTableSearch
 	UpdateRainbowTableSearchStatus(int64, string) error
+	UpdateRainbowTableSearchStatusAndSearchStarted(int64, string) error
+	UpdateRainbowTableSearchStatusPasswordAndSearchCompleted(int64, string, string) error
 }
 
 type MySQLRainbowTableSearchService struct {
@@ -126,5 +129,30 @@ func (service *MySQLRainbowTableSearchService) UpdateRainbowTableSearchStatus(se
 	return service.databaseClient.
 		Model(&model.RainbowTableSearch{ID: searchId}).
 		Update("status", status).
+		Error
+}
+
+func (service *MySQLRainbowTableSearchService) UpdateRainbowTableSearchStatusAndSearchStarted(searchId int64, status string) error {
+	return service.databaseClient.
+		Model(&model.RainbowTableSearch{ID: searchId}).
+		Updates(map[string]interface{}{
+			"status": status,
+			"searchStarted": time.Now(),
+		}).
+		Error
+}
+
+func (service *MySQLRainbowTableSearchService) UpdateRainbowTableSearchStatusPasswordAndSearchCompleted(
+	searchId int64,
+	status string,
+	password string,
+) error {
+	return service.databaseClient.
+		Model(&model.RainbowTableSearch{ID: searchId}).
+		Updates(map[string]interface{}{
+			"status": status,
+			"password": password,
+			"searchCompleted": time.Now(),
+		}).
 		Error
 }

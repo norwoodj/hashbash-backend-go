@@ -16,10 +16,11 @@ func CreateConsumerWorkers(
 	connection *rabbitmq.ServerConnection,
 	rainbowTableService dao.RainbowTableService,
 	rainbowTableGenerateJobService *rainbow.TableGeneratorJobService,
+	rainbowTableSearchJobService *rainbow.TableSearchJobService,
 ) (HashbashMqConsumerWorkers, error) {
 	deleteRainbowTableConsumer, err0 := NewDeleteRainbowTableConsumer(connection, rainbowTableService)
 	generateRainbowTableConsumer, err1 := NewGenerateRainbowTableConsumer(connection, rainbowTableService, rainbowTableGenerateJobService)
-	searchRainbowTableConsumer, err2 := NewSearchRainbowTableConsumer(connection)
+	searchRainbowTableConsumer, err2 := NewSearchRainbowTableConsumer(connection, rainbowTableSearchJobService)
 
 	for _, e := range []error{err0, err1, err2} {
 		if e != nil {

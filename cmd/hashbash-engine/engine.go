@@ -51,19 +51,41 @@ func hashbashEngine(_ *cobra.Command, _ []string) {
 	db := database.GetConnectionOrDie()
 	rainbowTableService := dao.NewRainbowTableService(db)
 	rainbowChainService := dao.NewRainbowChainService(db)
-	//rainbowTableSearchService := dao.NewRainbowTableSearchService(db)
+	rainbowTableSearchService := dao.NewRainbowTableSearchService(db)
 
-	jobConfig := rainbow.TableGenerateJobConfig{
+	generateJobConfig := rainbow.TableGenerateJobConfig{
 		ChainBatchSize: viper.GetInt64("generate-batch-size"),
 		NumThreads:     viper.GetInt("generate-num-threads"),
 	}
 
-	rainbowTableGenerateJobService := rainbow.NewTableGeneratorJobService(rainbowChainService, rainbowTableService, jobConfig)
+	searchJobConfig := rainbow.TableSearchJobConfig{
+		SearchHashBatchSize: viper.GetInt("search-batch-size"),
+		NumThreads:          viper.GetInt("search-num-threads"),
+	}
+
+	rainbowTableGenerateJobService := rainbow.NewRainbowTableGeneratorJobService(
+		generateJobConfig,
+		rainbowChainService,
+		rainbowTableService,
+	)
+
+	rainbowTableSearchJobService := rainbow.NewRainbowTableSearchJobService(
+		searchJobConfig,
+		rainbowChainService,
+		rainbowTableService,
+		rainbowTableSearchService,
+	)
 
 	connection := rabbitmq.AcquireMqConnectionOrDie()
 	defer connection.Close()
 
-	hashbashConsumers, err := rabbitmq.CreateConsumerWorkers(connection, rainbowTableService, rainbowTableGenerateJobService)
+	hashbashConsumers, err := rabbitmq.CreateConsumerWorkers(
+		connection,
+		rainbowTableService,
+		rainbowTableGenerateJobService,
+		rainbowTableSearchJobService,
+	)
+
 	if err != nil {
 		log.Errorf("Failed to instantiate rabbitmq consumers: %s", err)
 		os.Exit(1)
