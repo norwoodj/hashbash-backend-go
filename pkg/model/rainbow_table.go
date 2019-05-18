@@ -12,7 +12,6 @@ const StatusCompleted = "COMPLETED"
 const StatusFound = "FOUND"
 const StatusNotFound = "NOT_FOUND"
 
-
 type RainbowTable struct {
 	ID                int16      `gorm:"primary_key,column:id"json:"id"`
 	Name              string     `gorm:"column:name"json:"name"`

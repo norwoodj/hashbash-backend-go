@@ -1,18 +1,20 @@
 package main
 
 import (
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"net/http"
+	"os"
+	"strconv"
+
 	"github.com/norwoodj/hashbash-backend-go/pkg/model"
 	"github.com/norwoodj/hashbash-backend-go/pkg/rainbow"
 	"github.com/norwoodj/hashbash-backend-go/pkg/util"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"io/ioutil"
-	"net/http"
-	"os"
-	"strconv"
 )
 
 func searchCommandFn(_ *cobra.Command, args []string) {
@@ -62,7 +64,7 @@ func searchCommandFn(_ *cobra.Command, args []string) {
 
 	for i := 0; i < int(numPasswords); i++ {
 		password := util.RandomString(&rainbowTable.CharacterSet, rainbowTable.PasswordLength)
-		hashedPassword := fmt.Sprintf("%x", hashFunction.Apply(password))
+		hashedPassword := hex.EncodeToString(hashFunction.Apply(password))
 		log.Infof("searching for %s which should reverse to %s", hashedPassword, password)
 
 		_, err := http.Post(
@@ -83,7 +85,7 @@ func newSearchSubcommand() *cobra.Command {
 		Use:   "search <rainbow-table-id> <num-passwords>",
 		Short: "Generate random passwords and searches a provided rainbow table for their hashes",
 		Run:   searchCommandFn,
-		Args: cobra.ExactArgs(2),
+		Args:  cobra.ExactArgs(2),
 	}
 
 	searchCommand.Flags().String("hashbash-host", "http://localhost", "Hashbash server to make API requests to")

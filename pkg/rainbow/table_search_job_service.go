@@ -60,7 +60,7 @@ func (service *TableSearchJobService) runChainGenerationThread(
 			int(rainbowTable.ChainLength-chainIndex-1),
 		)
 
-		hashStringRep := fmt.Sprintf("%x", rainbowChain.hashedPlaintext)
+		hashStringRep := hex.EncodeToString(rainbowChain.hashedPlaintext)
 
 		indexByEndHashMutex.Lock()
 		indexByEndHash[hashStringRep] = chainIndex
@@ -90,10 +90,12 @@ func (service *TableSearchJobService) runSearchThread(
 	foundChannel chan model.RainbowChain,
 ) {
 	defer close(foundChannel)
-	rainbowChain := service.rainbowChainService.FindChainByTableIdAndEndHashIn(rainbowTableId, searchBatch)
+	rainbowChains := service.rainbowChainService.FindChainByTableIdAndEndHashIn(rainbowTableId, searchBatch)
 
-	if rainbowChain.EndHash != "" {
-		foundChannel <- rainbowChain
+	for _, r := range rainbowChains {
+		if r.EndHash != "" {
+			foundChannel <- r
+		}
 	}
 }
 
@@ -104,20 +106,22 @@ func (service *TableSearchJobService) generatePlaintextFromFoundEndHash(
 	rainbowChainGeneratorService *chainGeneratorService,
 ) string {
 	for _, foundChannel := range foundChannels {
-		rainbowChain := <-foundChannel
-		if rainbowChain.EndHash == "" {
-			continue
-		}
+		for rainbowChain := range foundChannel {
+			if rainbowChain.EndHash == "" {
+				continue
+			}
 
-		chainIndex, _ := indexByEndHash[rainbowChain.EndHash]
-		plaintextLink := rainbowChainGeneratorService.generateRainbowChainLinkFromPlaintext(
-			rainbowChain.StartPlaintext,
-			0,
-			int(chainIndex+1),
-		)
+			chainIndex, _ := indexByEndHash[rainbowChain.EndHash]
+			plaintextLink := rainbowChainGeneratorService.generateRainbowChainLinkFromPlaintext(
+				rainbowChain.StartPlaintext,
+				0,
+				int(chainIndex+1),
+			)
 
-		if fmt.Sprintf("%x", plaintextLink.hashedPlaintext) == searchHash {
-			return plaintextLink.plaintext
+			hashedPlaintextHex := hex.EncodeToString(plaintextLink.hashedPlaintext)
+			if hashedPlaintextHex == searchHash {
+				return plaintextLink.plaintext
+			}
 		}
 	}
 

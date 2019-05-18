@@ -101,7 +101,7 @@ func (service *MySQLRainbowTableService) UpdateRainbowTableStatusAndGenerateStar
 	return service.databaseClient.
 		Model(&model.RainbowTable{ID: id}).
 		Updates(map[string]interface{}{
-			"status": status,
+			"status":          status,
 			"generateStarted": time.Now(),
 		}).Error
 }
@@ -110,9 +110,9 @@ func (service *MySQLRainbowTableService) UpdateRainbowTableStatusAndFinalChainCo
 	return service.databaseClient.
 		Model(&model.RainbowTable{ID: id}).
 		Updates(map[string]interface{}{
-			"finalChainCount": finalChainCount,
+			"finalChainCount":   finalChainCount,
 			"generateCompleted": time.Now(),
-			"status": status,
+			"status":            status,
 		}).Error
 }
 
