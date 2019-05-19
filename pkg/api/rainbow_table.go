@@ -3,6 +3,7 @@ package api
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/norwoodj/hashbash-backend-go/pkg/api_model"
 	"github.com/norwoodj/hashbash-backend-go/pkg/model"
 	"github.com/norwoodj/hashbash-backend-go/pkg/rabbitmq"
 	"github.com/norwoodj/hashbash-backend-go/pkg/util"
@@ -82,7 +83,7 @@ func getListRainbowTablesHandler(rainbowTableService dao.RainbowTableService) fu
 		writer.Header().Set("Content-Type", "application/json")
 		json.
 			NewEncoder(writer).
-			Encode(rainbowTables)
+			Encode(api_model.ConvertRainbowTablesToApiModels(rainbowTables))
 	}
 }
 
@@ -103,7 +104,7 @@ func getRainbowTableByIdHandler(rainbowTableService dao.RainbowTableService) fun
 		writer.Header().Set("Content-Type", "application/json")
 		json.
 			NewEncoder(writer).
-			Encode(rainbowTable)
+			Encode(api_model.ConvertRainbowTableToApiModel(rainbowTable))
 	}
 }
 

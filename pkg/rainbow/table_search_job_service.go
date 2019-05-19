@@ -50,6 +50,7 @@ func (service *TableSearchJobService) runChainGenerationThread(
 	rainbowChainGeneratorService := newChainGeneratorService(
 		hashFunctionProvider.NewHashFunction(),
 		getDefaultReductionFunctionFamily(int(rainbowTable.PasswordLength), rainbowTable.CharacterSet),
+		1,
 	)
 
 	chainIndex := atomic.AddInt64(currentPossibleIndex, 1)
@@ -209,6 +210,7 @@ func (service *TableSearchJobService) RunSearchJob(searchId int64) error {
 	rainbowChainGeneratorService := newChainGeneratorService(
 		hashFunctionProvider.NewHashFunction(),
 		reductionFunctionFamily,
+		1,
 	)
 
 	plaintext := service.generatePlaintextFromFoundEndHash(

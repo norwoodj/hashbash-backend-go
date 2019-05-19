@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"github.com/norwoodj/hashbash-backend-go/pkg/api_model"
 	"github.com/norwoodj/hashbash-backend-go/pkg/dao"
 	"github.com/norwoodj/hashbash-backend-go/pkg/rabbitmq"
 	log "github.com/sirupsen/logrus"
@@ -53,7 +54,7 @@ func getRainbowTableSearchesByIdHandler(rainbowTableSearchService dao.RainbowTab
 		writer.Header().Set("Content-Type", "application/json")
 		json.
 			NewEncoder(writer).
-			Encode(rainbowTableSearches)
+			Encode(api_model.ConvertRainbowTableSearchesToApiModels(rainbowTableSearches))
 	}
 }
 
@@ -95,11 +96,11 @@ func getRainbowTableSearchByIdHandler(rainbowTableSearchService dao.RainbowTable
 			return
 		}
 
-		rainbowTableSearches := rainbowTableSearchService.FindRainbowTableSearchById(rainbowTableSearchId)
+		rainbowTableSearch := rainbowTableSearchService.FindRainbowTableSearchById(rainbowTableSearchId)
 		writer.Header().Set("Content-Type", "application/json")
 		json.
 			NewEncoder(writer).
-			Encode(rainbowTableSearches)
+			Encode(api_model.ConvertRainbowTableSearchToApiModel(rainbowTableSearch))
 	}
 }
 
@@ -154,7 +155,7 @@ func createRainbowTableSearchByIdHandler(
 			return
 		}
 
-		response := rainbowTableSearchResponse{
+		response := api_model.RainbowTableSearchResponse{
 			Hash:     rainbowTableSearch.Hash,
 			SearchId: rainbowTableSearch.ID,
 			Status:   rainbowTableSearch.Status,

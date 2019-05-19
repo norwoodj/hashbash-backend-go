@@ -6,6 +6,7 @@ import (
 )
 
 type chainGeneratorService struct {
+	RandomStringGenerator
 	hashFunction            HashFunction
 	reductionFunctionFamily reductionFunctionFamily
 }
@@ -13,8 +14,10 @@ type chainGeneratorService struct {
 func newChainGeneratorService(
 	hashFunction HashFunction,
 	reductionFunctionFamily reductionFunctionFamily,
+	randomStringSeed int,
 ) *chainGeneratorService {
 	return &chainGeneratorService{
+		RandomStringGenerator:   *NewRandomStringGenerator(randomStringSeed),
 		hashFunction:            hashFunction,
 		reductionFunctionFamily: reductionFunctionFamily,
 	}

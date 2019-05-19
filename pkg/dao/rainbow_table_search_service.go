@@ -7,8 +7,8 @@ import (
 )
 
 type RainbowTableSearchResults struct {
-	Count        int64  `json:"count"`
-	SearchStatus string `json:"searchStatus"`
+	Count        int64  `gorm:"column:count"json:"count"`
+	SearchStatus string `gorm:"column:status"json:"searchStatus"`
 }
 
 type RainbowTableSearchResultSummary struct {
@@ -97,9 +97,9 @@ func (service *MySQLRainbowTableSearchService) GetRainbowTableSearchResults(rain
 	searchResults := make([]RainbowTableSearchResults, 0)
 	service.databaseClient.
 		Model(&model.RainbowTableSearch{}).
-		Select("status AS searchStatus, COUNT(*) AS count").
+		Select("status, COUNT(*) AS count").
 		Where("rainbowTableId = ? and status IN (?)", rainbowTableId, []string{model.SearchFound, model.SearchNotFound}).
-		Group("searchStatus").
+		Group("status").
 		Scan(&searchResults)
 
 	var searchResultSummary RainbowTableSearchResultSummary

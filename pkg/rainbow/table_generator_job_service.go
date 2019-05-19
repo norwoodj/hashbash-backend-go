@@ -6,7 +6,6 @@ import (
 
 	"github.com/norwoodj/hashbash-backend-go/pkg/dao"
 	"github.com/norwoodj/hashbash-backend-go/pkg/model"
-	"github.com/norwoodj/hashbash-backend-go/pkg/util"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -46,7 +45,7 @@ func (service *TableGeneratorJobService) runChainGeneratorThread(
 
 	for atomic.AddInt64(batchesRemaining, -1) >= 0 {
 		for i := 0; i < int(service.jobConfig.ChainBatchSize); i++ {
-			startPlaintext := util.RandomString(&rainbowTable.CharacterSet, rainbowTable.PasswordLength)
+			startPlaintext := chainGeneratorService.NewRandomString(rainbowTable.CharacterSet, rainbowTable.PasswordLength)
 			chainList[i] = chainGeneratorService.generateRainbowChain(startPlaintext, chainLength)
 		}
 
@@ -98,6 +97,7 @@ func (service *TableGeneratorJobService) spawnChainGeneratorThreads(
 		chainGeneratorService := newChainGeneratorService(
 			hashFunctionProvider.NewHashFunction(),
 			getDefaultReductionFunctionFamily(int(rainbowTable.PasswordLength), rainbowTable.CharacterSet),
+			i+1,
 		)
 
 		go service.runChainGeneratorThread(
