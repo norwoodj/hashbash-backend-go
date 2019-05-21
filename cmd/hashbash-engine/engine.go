@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/norwoodj/hashbash-backend-go/pkg/metrics"
 	"os"
 	"os/signal"
 	"syscall"
@@ -63,10 +64,17 @@ func hashbashEngine(_ *cobra.Command, _ []string) {
 		NumThreads:          viper.GetInt("search-num-threads"),
 	}
 
+	chainGenerationSummary := metrics.NewRainbowChainSummary("chain", "generate_seconds")
+	chainWriteSummary := metrics.NewRainbowChainSummary("chain", "write_seconds")
+	prometheusPort := viper.GetInt("prometheus-port")
+	metrics.StartPrometheusMetricsServer(prometheusPort)
+
 	rainbowTableGenerateJobService := rainbow.NewRainbowTableGeneratorJobService(
 		generateJobConfig,
 		rainbowChainService,
 		rainbowTableService,
+		chainGenerationSummary,
+		chainWriteSummary,
 	)
 
 	rainbowTableSearchJobService := rainbow.NewRainbowTableSearchJobService(

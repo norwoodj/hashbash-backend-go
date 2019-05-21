@@ -39,7 +39,7 @@ func NewRainbowTableSearchJobService(
 
 func (service *TableSearchJobService) runChainGenerationThread(
 	searchHash []byte,
-	rainbowTable model.RainbowTable,
+	rainbowTable *model.RainbowTable,
 	indexByEndHash map[string]int64,
 	hashFunctionProvider HashFunctionProvider,
 	currentPossibleIndex *int64,
@@ -130,8 +130,8 @@ func (service *TableSearchJobService) generatePlaintextFromFoundEndHash(
 }
 
 func (service *TableSearchJobService) spawnChainGenerationThreads(
-	rainbowTableSearch model.RainbowTableSearch,
-	rainbowTable model.RainbowTable,
+	rainbowTableSearch *model.RainbowTableSearch,
+	rainbowTable *model.RainbowTable,
 	indexByEndHash map[string]int64,
 	errorChannels []chan error,
 	hashFunctionProvider HashFunctionProvider,
@@ -189,8 +189,8 @@ func (service *TableSearchJobService) RunSearchJob(searchId int64) error {
 	errorChannels := initializeErrorChannels(service.jobConfig.NumThreads)
 
 	err = service.spawnChainGenerationThreads(
-		rainbowTableSearch,
-		rainbowTable,
+		&rainbowTableSearch,
+		&rainbowTable,
 		indexByEndHash,
 		errorChannels,
 		hashFunctionProvider,

@@ -5,7 +5,9 @@ import (
 	"sync/atomic"
 
 	"github.com/norwoodj/hashbash-backend-go/pkg/dao"
+	"github.com/norwoodj/hashbash-backend-go/pkg/metrics"
 	"github.com/norwoodj/hashbash-backend-go/pkg/model"
+	"github.com/prometheus/client_golang/prometheus"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -15,25 +17,59 @@ type TableGenerateJobConfig struct {
 }
 
 type TableGeneratorJobService struct {
-	jobConfig           TableGenerateJobConfig
-	rainbowTableService dao.RainbowTableService
-	rainbowChainService dao.RainbowChainService
+	jobConfig              TableGenerateJobConfig
+	rainbowTableService    dao.RainbowTableService
+	rainbowChainService    dao.RainbowChainService
+	chainGenerationSummary *prometheus.SummaryVec
+	chainWriteSummary      *prometheus.SummaryVec
 }
 
 func NewRainbowTableGeneratorJobService(
 	jobConfig TableGenerateJobConfig,
 	rainbowChainService dao.RainbowChainService,
 	rainbowTableService dao.RainbowTableService,
+	chainGenerationSummary *prometheus.SummaryVec,
+	chainWriteSummary *prometheus.SummaryVec,
 ) *TableGeneratorJobService {
 	return &TableGeneratorJobService{
-		jobConfig:           jobConfig,
-		rainbowChainService: rainbowChainService,
-		rainbowTableService: rainbowTableService,
+		jobConfig:              jobConfig,
+		rainbowChainService:    rainbowChainService,
+		rainbowTableService:    rainbowTableService,
+		chainGenerationSummary: chainGenerationSummary,
+		chainWriteSummary:      chainWriteSummary,
 	}
 }
 
+func (service *TableGeneratorJobService) generateChain(
+	chainGeneratorService *chainGeneratorService,
+	rainbowTable *model.RainbowTable,
+	chainLength int,
+) model.RainbowChain {
+	labeledSummary := service.chainGenerationSummary.
+		With(metrics.GetRainbowTableMetricLabels(rainbowTable))
+
+	timer := prometheus.NewTimer(labeledSummary)
+	defer timer.ObserveDuration()
+
+	startPlaintext := chainGeneratorService.NewRandomString(rainbowTable.CharacterSet, rainbowTable.PasswordLength)
+	return chainGeneratorService.generateRainbowChain(startPlaintext, chainLength)
+}
+
+func (service *TableGeneratorJobService) saveRainbowChains(
+	rainbowTable *model.RainbowTable,
+	chainList []model.RainbowChain,
+) error {
+	labeledSummary := service.chainWriteSummary.
+		With(metrics.GetRainbowTableMetricLabels(rainbowTable))
+
+	timer := prometheus.NewTimer(labeledSummary)
+	defer timer.ObserveDuration()
+
+	return service.rainbowChainService.CreateRainbowChains(rainbowTable.ID, chainList)
+}
+
 func (service *TableGeneratorJobService) runChainGeneratorThread(
-	rainbowTable model.RainbowTable,
+	rainbowTable *model.RainbowTable,
 	chainGeneratorService *chainGeneratorService,
 	batchesRemaining *int64,
 	errorChannel chan error,
@@ -45,11 +81,10 @@ func (service *TableGeneratorJobService) runChainGeneratorThread(
 
 	for atomic.AddInt64(batchesRemaining, -1) >= 0 {
 		for i := 0; i < int(service.jobConfig.ChainBatchSize); i++ {
-			startPlaintext := chainGeneratorService.NewRandomString(rainbowTable.CharacterSet, rainbowTable.PasswordLength)
-			chainList[i] = chainGeneratorService.generateRainbowChain(startPlaintext, chainLength)
+			chainList[i] = service.generateChain(chainGeneratorService, rainbowTable, chainLength)
 		}
 
-		err := service.rainbowChainService.CreateRainbowChains(rainbowTable.ID, chainList)
+		err := service.saveRainbowChains(rainbowTable, chainList)
 		if err != nil {
 			errorChannel <- err
 		}
@@ -63,7 +98,7 @@ func (service *TableGeneratorJobService) runChainGeneratorThread(
 	log.Debugf("No batches remaining to be generated for rainbow table %d, exiting", rainbowTable.ID)
 }
 
-func (service *TableGeneratorJobService) checkAndUpdateRainbowTableStatus(rainbowTable model.RainbowTable) error {
+func (service *TableGeneratorJobService) checkAndUpdateRainbowTableStatus(rainbowTable *model.RainbowTable) error {
 	if rainbowTable.Status != model.StatusQueued {
 		return fmt.Errorf("cannot generate a rainbow table that is not in the %s state", model.StatusQueued)
 	}
@@ -76,7 +111,7 @@ func (service *TableGeneratorJobService) checkAndUpdateRainbowTableStatus(rainbo
 	return nil
 }
 
-func (service *TableGeneratorJobService) calculateNumBatches(rainbowTable model.RainbowTable) int64 {
+func (service *TableGeneratorJobService) calculateNumBatches(rainbowTable *model.RainbowTable) int64 {
 	batchesRemaining := rainbowTable.NumChains / service.jobConfig.ChainBatchSize
 
 	if rainbowTable.NumChains%service.jobConfig.ChainBatchSize > 0 {
@@ -87,7 +122,7 @@ func (service *TableGeneratorJobService) calculateNumBatches(rainbowTable model.
 }
 
 func (service *TableGeneratorJobService) spawnChainGeneratorThreads(
-	rainbowTable model.RainbowTable,
+	rainbowTable *model.RainbowTable,
 	hashFunctionProvider HashFunctionProvider,
 	errorChannels []chan error,
 ) {
@@ -110,7 +145,7 @@ func (service *TableGeneratorJobService) spawnChainGeneratorThreads(
 }
 
 func (service *TableGeneratorJobService) awaitChainGenerationCompletionOrErrors(
-	rainbowTable model.RainbowTable,
+	rainbowTable *model.RainbowTable,
 	errorChannels []chan error,
 ) error {
 	threadsInError := 0
@@ -138,7 +173,7 @@ func (service *TableGeneratorJobService) awaitChainGenerationCompletionOrErrors(
 	return nil
 }
 
-func (service *TableGeneratorJobService) updateFinalChainCountAndStatus(rainbowTable model.RainbowTable) error {
+func (service *TableGeneratorJobService) updateFinalChainCountAndStatus(rainbowTable *model.RainbowTable) error {
 	finalChainCount := service.rainbowChainService.CountChainsForRainbowTable(rainbowTable.ID)
 	err := service.rainbowTableService.UpdateRainbowTableStatusAndFinalChainCount(
 		rainbowTable.ID,
@@ -165,7 +200,7 @@ func (service *TableGeneratorJobService) RunGenerateJobForTable(rainbowTableId i
 		return fmt.Errorf("rainbow table with ID %d not found, cannot generate", rainbowTableId)
 	}
 
-	err := service.checkAndUpdateRainbowTableStatus(rainbowTable)
+	err := service.checkAndUpdateRainbowTableStatus(&rainbowTable)
 	if err != nil {
 		return err
 	}
@@ -176,12 +211,12 @@ func (service *TableGeneratorJobService) RunGenerateJobForTable(rainbowTableId i
 	}
 
 	errorChannels := initializeErrorChannels(service.jobConfig.NumThreads)
-	service.spawnChainGeneratorThreads(rainbowTable, hashFunctionProvider, errorChannels)
+	service.spawnChainGeneratorThreads(&rainbowTable, hashFunctionProvider, errorChannels)
 
-	err = service.awaitChainGenerationCompletionOrErrors(rainbowTable, errorChannels)
+	err = service.awaitChainGenerationCompletionOrErrors(&rainbowTable, errorChannels)
 	if err != nil {
 		return err
 	}
 
-	return service.updateFinalChainCountAndStatus(rainbowTable)
+	return service.updateFinalChainCountAndStatus(&rainbowTable)
 }
