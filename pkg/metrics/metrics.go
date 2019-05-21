@@ -7,7 +7,6 @@ import (
 	"strconv"
 )
 
-
 func GetRainbowTableMetricLabels(rainbowTable *model.RainbowTable) prometheus.Labels {
 	return prometheus.Labels{
 		"chain_length":     strconv.Itoa(int(rainbowTable.ChainLength)),

@@ -6,9 +6,11 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+var Version = "UNVERSIONED"
+
 func main() {
 	log.SetFormatter(&log.TextFormatter{FullTimestamp: true})
-	rootCmd := newRootCommand()
+	rootCmd := newRootCommand(Version)
 
 	if err := rootCmd.Execute(); err != nil {
 		log.Error(err)

@@ -10,11 +10,12 @@ import (
 	"time"
 )
 
-func newRootCommand() *cobra.Command {
+func newRootCommand(version string) *cobra.Command {
 	var rootCmd = &cobra.Command{
-		Use:   "hashbash-engine",
-		Short: "Run the hashbash consumers for servicing rainbow table requests",
-		Run:   hashbashEngine,
+		Use:     "hashbash-engine",
+		Short:   "Run the hashbash consumers for servicing rainbow table requests",
+		Run:     hashbashEngine,
+		Version: version,
 	}
 
 	engineFlags := rootCmd.PersistentFlags()
@@ -32,6 +33,6 @@ func newRootCommand() *cobra.Command {
 	viper.AutomaticEnv()
 	viper.SetEnvPrefix("HASHBASH")
 	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
-	viper.BindPFlags(rootCmd.PersistentFlags())
+	viper.BindPFlags(engineFlags)
 	return rootCmd
 }

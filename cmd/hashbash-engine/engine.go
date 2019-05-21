@@ -1,7 +1,6 @@
 package main
 
 import (
-	"github.com/norwoodj/hashbash-backend-go/pkg/metrics"
 	"os"
 	"os/signal"
 	"syscall"
@@ -9,8 +8,10 @@ import (
 
 	"github.com/norwoodj/hashbash-backend-go/pkg/dao"
 	"github.com/norwoodj/hashbash-backend-go/pkg/database"
+	"github.com/norwoodj/hashbash-backend-go/pkg/metrics"
 	"github.com/norwoodj/hashbash-backend-go/pkg/rabbitmq"
 	"github.com/norwoodj/hashbash-backend-go/pkg/rainbow"
+	"github.com/norwoodj/hashbash-backend-go/pkg/util"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -48,6 +49,8 @@ func startConsumersAndHandleSignals(consumers rabbitmq.HashbashMqConsumerWorkers
 func hashbashEngine(_ *cobra.Command, _ []string) {
 	logLevel, _ := log.ParseLevel(viper.GetString("log-level"))
 	log.SetLevel(logLevel)
+
+	util.DoInitialDelay()
 
 	db := database.GetConnectionOrDie()
 	rainbowTableService := dao.NewRainbowTableService(db)

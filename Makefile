@@ -1,35 +1,29 @@
-MAVEN_IMAGE=maven:3.6-jdk-12
+GOLANG_IMAGE=golang:1.12-alpine3.9
 DOCKER_REPOSITORY=jnorwood
+CONSUMERS_IMAGE=hashbash-consumers-go
+WEBAPP_IMAGE=hashbash-webapp-go
 
 
 .PHONY: all
 all: consumers webapp
 
 .PHONY: consumers
-consumers: hashbash-engine.jar
-	docker build --tag $(DOCKER_REPOSITORY)/hashbash-consumers:current --file docker/Dockerfile-consumers .
+consumers: version.txt
+	docker build --tag $(DOCKER_REPOSITORY)/$(CONSUMERS_IMAGE):current --file docker/Dockerfile-consumers .
 
 .PHONY: webapp
-webapp: hashbash-webapp.jar
-	docker build --tag $(DOCKER_REPOSITORY)/hashbash-webapp:current --file docker/Dockerfile-webapp .
-
-hashbash-engine.jar hashbash-webapp.jar: version-poms
-	docker run --rm -it -v ${HOME}/.m2:/root/.m2 -v ${PWD}:/opt/build -w /opt/build $(MAVEN_IMAGE) mvn clean verify
-	mv engine/target/hashbash-engine.jar webapp/target/hashbash-webapp.jar .
-
-version-poms: version.txt
-	docker run --rm -it -v ${HOME}/.m2:/root/.m2 -v ${PWD}:/opt/build -w /opt/build $(MAVEN_IMAGE) mvn versions:set --define newVersion=$(shell cat version.txt)
-	touch version-poms
+webapp: version.txt
+	docker build --tag $(DOCKER_REPOSITORY)/$(WEBAPP_IMAGE):current --file docker/Dockerfile-webapp .
 
 version.txt:
-	echo release-$(shell docker run --rm --entrypoint date $(MAVEN_IMAGE) --utc "+%Y%m%d-%H%M") > version.txt
+	echo release-$(shell docker run --rm --entrypoint date $(GOLANG_IMAGE) --utc "+%Y%m%d-%H%M") > version.txt
 
 .PHONY: push
 push: all
-	docker tag $(DOCKER_REPOSITORY)/hashbash-consumers:current $(DOCKER_REPOSITORY)/hashbash-consumers:$(shell cat version.txt)
-	docker tag $(DOCKER_REPOSITORY)/hashbash-webapp:current $(DOCKER_REPOSITORY)/hashbash-webapp:$(shell cat version.txt)
-	docker push $(DOCKER_REPOSITORY)/hashbash-consumers:$(shell cat version.txt)
-	docker push $(DOCKER_REPOSITORY)/hashbash-webapp:$(shell cat version.txt)
+	docker tag $(DOCKER_REPOSITORY)/$(CONSUMERS_IMAGE):current $(DOCKER_REPOSITORY)/$(CONSUMERS_IMAGE):$(shell cat version.txt)
+	docker tag $(DOCKER_REPOSITORY)/$(WEBAPP_IMAGE):current $(DOCKER_REPOSITORY)/$(WEBAPP_IMAGE):$(shell cat version.txt)
+	docker push $(DOCKER_REPOSITORY)/$(CONSUMERS_IMAGE):$(shell cat version.txt)
+	docker push $(DOCKER_REPOSITORY)/$(WEBAPP_IMAGE):$(shell cat version.txt)
 
 .PHONY: run-deps
 run-deps:
@@ -51,7 +45,6 @@ clear-data:
 
 .PHONY: clean
 clean:
-	rm -f version.txt
-	git checkout pom.xml */pom.xml
-	rm -f pom.xml.versionsBackup */pom.xml.versionsBackup
-	rm -f *.jar
+	rm -vf version.txt
+	rm -vf cmd/hashbash-engine/hashbash-engine
+	rm -vf cmd/hashbash-webapp/hashbash-webapp

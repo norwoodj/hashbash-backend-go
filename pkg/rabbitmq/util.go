@@ -23,7 +23,7 @@ func AddRabbitMqFlags(flags *pflag.FlagSet) {
 
 func AcquireMqConnectionOrDie() *rabbitmq.ServerConnection {
 	rabbitConfig := rabbitmq.NewConfig(
-		viper.GetString("rabbitmq-hostname"),
+		viper.GetString("rabbitmq-host"),
 		viper.GetString("rabbitmq-username"),
 		viper.GetString("rabbitmq-password"),
 	)

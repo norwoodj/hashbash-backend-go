@@ -20,15 +20,31 @@ services:
 
   nginx:
     image: jnorwood/hashbash-nginx:release-20190425-1647
+    depends_on:
+      - hashbash-webapp
     ports:
       - 80:80
 
   hashbash-consumers:
-    image: jnorwood/hashbash-consumers:current
+    image: jnorwood/hashbash-consumers-go:current
+    depends_on:
+      - mysql
+      - rabbitmq
     environment:
-      - SPRING_PROFILES_ACTIVE=LCL,DCK,OVR
+      HASHBASH_DATABASE_HOST: mysql
+      HASHBASH_RABBITMQ_HOST: rabbitmq
+      HASHBASH_INITIAL_DELAY: 10s
+      HASHBASH_LOG_LEVEL: debug
+    ports:
+      - 8081:8081
 
   hashbash-webapp:
-    image: jnorwood/hashbash-webapp:current
+    image: jnorwood/hashbash-webapp-go:current
+    depends_on:
+      - mysql
+      - rabbitmq
     environment:
-      - SPRING_PROFILES_ACTIVE=LCL,DCK,OVR
+      HASHBASH_DATABASE_HOST: mysql
+      HASHBASH_RABBITMQ_HOST: rabbitmq
+      HASHBASH_INITIAL_DELAY: 10s
+      HASHBASH_LOG_LEVEL: debug

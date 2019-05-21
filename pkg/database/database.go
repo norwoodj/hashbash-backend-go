@@ -22,11 +22,13 @@ func GetConnection() (*gorm.DB, error) {
 	cfg := mysql.NewConfig()
 	cfg.User = viper.GetString("database-username")
 	cfg.Passwd = viper.GetString("database-password")
+	cfg.Net = "tcp"
 	cfg.Addr = viper.GetString("database-host")
 	cfg.DBName = dbName
 	cfg.ParseTime = true
 
 	databaseDsn := cfg.FormatDSN()
+	log.Debug(databaseDsn)
 	db, err := gorm.Open("mysql", databaseDsn)
 
 	if err != nil {

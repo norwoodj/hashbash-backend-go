@@ -21,4 +21,5 @@ func possibleLogLevels() []string {
 func AddDefaultFlags(flags *pflag.FlagSet) {
 	logLevelUsage := fmt.Sprintf("Level of logs that should printed, one of (%s)", strings.Join(possibleLogLevels(), ", "))
 	flags.StringP("log-level", "l", "info", logLevelUsage)
+	flags.Duration("initial-delay", 0, "Time to delay startup to allow for database/rabbit to start (for local docker dev)")
 }

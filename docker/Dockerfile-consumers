@@ -1,9 +1,19 @@
-FROM openjdk:12.0-oracle
-MAINTAINER John Norwood <norwood.john.m@gmail.com>
+# Download dependencies and build the binary
+FROM golang:1.12-alpine3.9 AS build
+LABEL maintainer=norwood.john.m@gmail.com
 
-ARG MODULE=engine
+COPY go.mod go.sum /opt/hashbash/
+WORKDIR /opt/hashbash
+RUN apk add --no-cache git \
+    && go mod download
 
-WORKDIR /var/lib/johnmalcolmnorwood/hashbash
-COPY hashbash-${MODULE}.jar /var/lib/johnmalcolmnorwood/hashbash/hashbash-${MODULE}.jar
+COPY . /opt/hashbash/
+WORKDIR /opt/hashbash/cmd/hashbash-engine
+RUN go build -ldflags "-X main.Version=$(cat /opt/hashbash/version.txt)"
 
-ENTRYPOINT ["java", "-jar", "hashbash-engine.jar"]
+
+# Copy built binary into the final image
+FROM alpine:3.9
+COPY --from=build /opt/hashbash/cmd/hashbash-engine/hashbash-engine /
+EXPOSE 8081
+ENTRYPOINT ["/hashbash-engine"]

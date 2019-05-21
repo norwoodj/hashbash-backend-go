@@ -1,22 +1,23 @@
 package main
 
 import (
-	"github.com/norwoodj/hashbash-backend-go/pkg/rabbitmq"
 	"strings"
 	"time"
 
 	"github.com/norwoodj/hashbash-backend-go/pkg/database"
 	"github.com/norwoodj/hashbash-backend-go/pkg/frontend"
+	"github.com/norwoodj/hashbash-backend-go/pkg/rabbitmq"
 	"github.com/norwoodj/hashbash-backend-go/pkg/util"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
-func newRootCommand() *cobra.Command {
+func newRootCommand(version string) *cobra.Command {
 	var rootCmd = &cobra.Command{
-		Use:   "hashbash-webapp",
-		Short: "Serve the hashbash web application",
-		Run:   hashbashWebapp,
+		Use:     "hashbash-webapp",
+		Short:   "Serve the hashbash web application",
+		Run:     hashbashWebapp,
+		Version: version,
 	}
 
 	webappFlags := rootCmd.PersistentFlags()
