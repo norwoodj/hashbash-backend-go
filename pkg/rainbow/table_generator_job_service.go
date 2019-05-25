@@ -40,27 +40,12 @@ func NewRainbowTableGeneratorJobService(
 	}
 }
 
-func (service *TableGeneratorJobService) generateChain(
-	chainGeneratorService *chainGeneratorService,
-	rainbowTable *model.RainbowTable,
-	chainLength int,
-) model.RainbowChain {
-	labeledSummary := service.chainGenerationSummary.
-		With(metrics.GetRainbowTableMetricLabels(rainbowTable))
-
-	timer := prometheus.NewTimer(labeledSummary)
-	defer timer.ObserveDuration()
-
-	startPlaintext := chainGeneratorService.NewRandomString(rainbowTable.CharacterSet, rainbowTable.PasswordLength)
-	return chainGeneratorService.generateRainbowChain(startPlaintext, chainLength)
-}
-
 func (service *TableGeneratorJobService) saveRainbowChains(
 	rainbowTable *model.RainbowTable,
 	chainList []model.RainbowChain,
 ) error {
 	labeledSummary := service.chainWriteSummary.
-		With(metrics.GetRainbowTableMetricLabels(rainbowTable))
+		With(metrics.GetRainbowTableMetricLabels(rainbowTable, len(chainList)))
 
 	timer := prometheus.NewTimer(labeledSummary)
 	defer timer.ObserveDuration()
@@ -80,9 +65,15 @@ func (service *TableGeneratorJobService) runChainGeneratorThread(
 	chainLength := int(rainbowTable.ChainLength)
 
 	for atomic.AddInt64(batchesRemaining, -1) >= 0 {
+		timer := prometheus.NewTimer(service.chainGenerationSummary.
+			With(metrics.GetRainbowTableMetricLabels(rainbowTable, int(service.jobConfig.ChainBatchSize))))
+
 		for i := 0; i < int(service.jobConfig.ChainBatchSize); i++ {
-			chainList[i] = service.generateChain(chainGeneratorService, rainbowTable, chainLength)
+			startPlaintext := chainGeneratorService.NewRandomString(rainbowTable.CharacterSet, rainbowTable.PasswordLength)
+			chainList[i] = chainGeneratorService.generateRainbowChain(startPlaintext, chainLength)
 		}
+
+		timer.ObserveDuration()
 
 		err := service.saveRainbowChains(rainbowTable, chainList)
 		if err != nil {

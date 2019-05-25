@@ -7,8 +7,9 @@ import (
 	"strconv"
 )
 
-func GetRainbowTableMetricLabels(rainbowTable *model.RainbowTable) prometheus.Labels {
+func GetRainbowTableMetricLabels(rainbowTable *model.RainbowTable, batchSize int) prometheus.Labels {
 	return prometheus.Labels{
+		"batch_size":       strconv.Itoa(batchSize),
 		"chain_length":     strconv.Itoa(int(rainbowTable.ChainLength)),
 		"hash_function":    rainbowTable.HashFunction,
 		"rainbow_table_id": strconv.Itoa(int(rainbowTable.ID)),
@@ -23,10 +24,10 @@ func NewRainbowChainSummary(
 		Namespace:   "rainbow",
 		Subsystem:   metricSubsystem,
 		Name:        metricName,
-		ConstLabels: prometheus.Labels{"language": "golang"},
 	}
 
 	return promauto.NewSummaryVec(summaryOpts, []string{
+		"batch_size",
 		"chain_length",
 		"hash_function",
 		"rainbow_table_id",

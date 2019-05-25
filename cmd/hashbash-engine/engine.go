@@ -1,8 +1,11 @@
 package main
 
 import (
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"net/http"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
 	"time"
 
@@ -17,7 +20,12 @@ import (
 	"github.com/spf13/viper"
 )
 
-func startConsumersAndHandleSignals(consumers rabbitmq.HashbashMqConsumerWorkers, shutdownGraceDuration time.Duration) {
+func startConsumersAndHandleSignals(
+	consumers rabbitmq.HashbashMqConsumerWorkers,
+	shutdownGraceDuration time.Duration,
+	waitGroup *sync.WaitGroup,
+) {
+	defer waitGroup.Done()
 	consumerStartErrorChannels := []chan error{make(chan error), make(chan error), make(chan error)}
 	quit := make(chan bool)
 
@@ -69,8 +77,6 @@ func hashbashEngine(_ *cobra.Command, _ []string) {
 
 	chainGenerationSummary := metrics.NewRainbowChainSummary("chain", "generate_seconds")
 	chainWriteSummary := metrics.NewRainbowChainSummary("chain", "write_seconds")
-	prometheusPort := viper.GetInt("prometheus-port")
-	metrics.StartPrometheusMetricsServer(prometheusPort)
 
 	rainbowTableGenerateJobService := rainbow.NewRainbowTableGeneratorJobService(
 		generateJobConfig,
@@ -102,5 +108,14 @@ func hashbashEngine(_ *cobra.Command, _ []string) {
 		os.Exit(1)
 	}
 
-	startConsumersAndHandleSignals(hashbashConsumers, viper.GetDuration("shutdown-timeout"))
+	prometheusHandler := promhttp.Handler()
+	http.Handle("/prometheus", prometheusHandler)
+
+	waitGroup := sync.WaitGroup{}
+	waitGroup.Add(2)
+	prometheusPort := viper.GetInt("prometheus-port")
+
+	go util.StartHttpServer(prometheusPort, "prometheus metrics", prometheusHandler, &waitGroup)
+	go startConsumersAndHandleSignals(hashbashConsumers, viper.GetDuration("shutdown-timeout"), &waitGroup)
+	waitGroup.Wait()
 }
