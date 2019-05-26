@@ -33,3 +33,21 @@ func NewRainbowChainSummary(
 		"rainbow_table_id",
 	})
 }
+
+func NewRainbowChainCounter(
+	metricSubsystem string,
+	metricName string,
+) *prometheus.CounterVec {
+	counterOpts := prometheus.CounterOpts{
+		Namespace:   "rainbow",
+		Subsystem:   metricSubsystem,
+		Name:        metricName,
+	}
+
+	return promauto.NewCounterVec(counterOpts, []string{
+		"batch_size",
+		"chain_length",
+		"hash_function",
+		"rainbow_table_id",
+	})
+}

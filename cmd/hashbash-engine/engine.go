@@ -77,6 +77,7 @@ func hashbashEngine(_ *cobra.Command, _ []string) {
 
 	chainGenerationSummary := metrics.NewRainbowChainSummary("chain", "generate_seconds")
 	chainWriteSummary := metrics.NewRainbowChainSummary("chain", "write_seconds")
+	chainsCreatedCounter := metrics.NewRainbowChainCounter("chain", "created_total")
 
 	rainbowTableGenerateJobService := rainbow.NewRainbowTableGeneratorJobService(
 		generateJobConfig,
@@ -84,6 +85,7 @@ func hashbashEngine(_ *cobra.Command, _ []string) {
 		rainbowTableService,
 		chainGenerationSummary,
 		chainWriteSummary,
+		chainsCreatedCounter,
 	)
 
 	rainbowTableSearchJobService := rainbow.NewRainbowTableSearchJobService(

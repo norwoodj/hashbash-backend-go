@@ -22,6 +22,7 @@ type TableGeneratorJobService struct {
 	rainbowChainService    dao.RainbowChainService
 	chainGenerationSummary *prometheus.SummaryVec
 	chainWriteSummary      *prometheus.SummaryVec
+	chainsCreatedCounter   *prometheus.CounterVec
 }
 
 func NewRainbowTableGeneratorJobService(
@@ -30,6 +31,7 @@ func NewRainbowTableGeneratorJobService(
 	rainbowTableService dao.RainbowTableService,
 	chainGenerationSummary *prometheus.SummaryVec,
 	chainWriteSummary *prometheus.SummaryVec,
+	chainsCreatedCounter *prometheus.CounterVec,
 ) *TableGeneratorJobService {
 	return &TableGeneratorJobService{
 		jobConfig:              jobConfig,
@@ -37,6 +39,7 @@ func NewRainbowTableGeneratorJobService(
 		rainbowTableService:    rainbowTableService,
 		chainGenerationSummary: chainGenerationSummary,
 		chainWriteSummary:      chainWriteSummary,
+		chainsCreatedCounter:   chainsCreatedCounter,
 	}
 }
 
@@ -84,6 +87,10 @@ func (service *TableGeneratorJobService) runChainGeneratorThread(
 		if err != nil {
 			errorChannel <- err
 		}
+
+		service.chainsCreatedCounter.
+			With(metrics.GetRainbowTableMetricLabels(rainbowTable, int(service.jobConfig.ChainBatchSize))).
+			Add(float64(service.jobConfig.ChainBatchSize))
 	}
 
 	log.Debugf("No batches remaining to be generated for rainbow table %d, exiting", rainbowTable.ID)
