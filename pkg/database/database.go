@@ -13,9 +13,9 @@ import (
 const dbName = "hashbash"
 
 func AddDatabaseFlags(flags *pflag.FlagSet) {
-	flags.StringP("database-host", "d", "localhost", "The hostname or IP address of the hashbash database")
-	flags.StringP("database-username", "u", "root", "The username with which to authenticate to the database")
-	flags.StringP("database-password", "p", "root", "The password with which to authenticate to the database")
+	flags.String("database-host", "localhost", "The hostname or IP address of the hashbash database")
+	flags.String("database-username", "root", "The username with which to authenticate to the database")
+	flags.String("database-password", "root", "The password with which to authenticate to the database")
 }
 
 func GetConnection() (*gorm.DB, error) {

@@ -1,8 +1,6 @@
 package main
 
 import (
-	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"net/http"
 	"os"
 	"os/signal"
 	"sync"
@@ -110,14 +108,10 @@ func hashbashEngine(_ *cobra.Command, _ []string) {
 		os.Exit(1)
 	}
 
-	prometheusHandler := promhttp.Handler()
-	http.Handle("/prometheus", prometheusHandler)
-
 	waitGroup := sync.WaitGroup{}
 	waitGroup.Add(2)
-	prometheusPort := viper.GetInt("prometheus-port")
 
-	go util.StartHttpServer(prometheusPort, "prometheus metrics", prometheusHandler, &waitGroup)
+	go util.StartManagementServer(&waitGroup)
 	go startConsumersAndHandleSignals(hashbashConsumers, viper.GetDuration("shutdown-timeout"), &waitGroup)
 	waitGroup.Wait()
 }

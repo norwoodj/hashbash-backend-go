@@ -8,11 +8,9 @@ import (
 	"github.com/norwoodj/hashbash-backend-go/pkg/frontend"
 	"github.com/norwoodj/hashbash-backend-go/pkg/rabbitmq"
 	"github.com/norwoodj/hashbash-backend-go/pkg/util"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"net/http"
 	"os"
 	"strings"
 	"sync"
@@ -82,15 +80,11 @@ func hashbashWebapp(_ *cobra.Command, _ []string) {
 
 	walkRoutes(router)
 
-	prometheusHandler := promhttp.Handler()
-	http.Handle("/prometheus", prometheusHandler)
-
 	waitGroup := sync.WaitGroup{}
 	waitGroup.Add(2)
-	prometheusPort := viper.GetInt("prometheus-port")
 	webPort := viper.GetInt("web-port")
 
+	go util.StartManagementServer(&waitGroup)
 	go util.StartHttpServer(webPort, "hashbash webapp", router, &waitGroup)
-	go util.StartHttpServer(prometheusPort, "prometheus metrics", prometheusHandler, &waitGroup)
 	waitGroup.Wait()
 }

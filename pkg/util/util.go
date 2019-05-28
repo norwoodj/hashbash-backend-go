@@ -10,6 +10,8 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/heptiolabs/healthcheck"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
@@ -68,6 +70,18 @@ func startServerAndHandleSignals(server *http.Server, serverName string, port in
 	os.Exit(0)
 }
 
+func StartManagementServer(waitGroup *sync.WaitGroup) {
+	managementPort := viper.GetInt("management-port")
+	healthcheckHandler := healthcheck.NewHandler()
+	prometheusHandler := promhttp.Handler()
+
+	router := http.ServeMux{}
+	router.Handle("/prometheus", prometheusHandler)
+	router.Handle("/", healthcheckHandler)
+
+	StartHttpServer(managementPort, "management", &router, waitGroup)
+}
+
 func StartHttpServer(port int, serverName string, handler http.Handler, waitGroup *sync.WaitGroup) {
 	defer waitGroup.Done()
 	server := &http.Server{
@@ -78,5 +92,5 @@ func StartHttpServer(port int, serverName string, handler http.Handler, waitGrou
 		Handler:      handler,
 	}
 
-	startServerAndHandleSignals(server, serverName,	port, time.Second * 5)
+	startServerAndHandleSignals(server, serverName, port, time.Second*5)
 }

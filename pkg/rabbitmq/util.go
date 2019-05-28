@@ -15,10 +15,10 @@ const deleteRainbowTableRoutingKey = "deleteRainbowTable"
 const searchRainbowTableRoutingKey = "searchRainbowTable"
 
 func AddRabbitMqFlags(flags *pflag.FlagSet) {
-	flags.StringP("rabbitmq-host", "r", "localhost", "The hostname or IP address of the hashbash rabbitmq metrics")
-	flags.StringP("rabbitmq-username", "n", "guest", "The username with which to authenticate to the rabbitmq metrics")
-	flags.StringP("rabbitmq-password", "q", "guest", "The password with which to authenticate to the rabbitmq metrics")
-	flags.IntP("rabbitmq-port", "m", 5672, "The port on which to connect to the hashbash rabbitmq metrics")
+	flags.String("rabbitmq-host", "localhost", "The hostname or IP address of the hashbash rabbitmq metrics")
+	flags.String("rabbitmq-username", "guest", "The username with which to authenticate to the rabbitmq metrics")
+	flags.String("rabbitmq-password", "guest", "The password with which to authenticate to the rabbitmq metrics")
+	flags.Int("rabbitmq-port", 5672, "The port on which to connect to the hashbash rabbitmq metrics")
 }
 
 func AcquireMqConnectionOrDie() *rabbitmq.ServerConnection {

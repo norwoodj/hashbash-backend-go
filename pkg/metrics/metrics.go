@@ -21,9 +21,9 @@ func NewRainbowChainSummary(
 	metricName string,
 ) *prometheus.SummaryVec {
 	summaryOpts := prometheus.SummaryOpts{
-		Namespace:   "rainbow",
-		Subsystem:   metricSubsystem,
-		Name:        metricName,
+		Namespace: "rainbow",
+		Subsystem: metricSubsystem,
+		Name:      metricName,
 	}
 
 	return promauto.NewSummaryVec(summaryOpts, []string{
@@ -39,9 +39,9 @@ func NewRainbowChainCounter(
 	metricName string,
 ) *prometheus.CounterVec {
 	counterOpts := prometheus.CounterOpts{
-		Namespace:   "rainbow",
-		Subsystem:   metricSubsystem,
-		Name:        metricName,
+		Namespace: "rainbow",
+		Subsystem: metricSubsystem,
+		Name:      metricName,
 	}
 
 	return promauto.NewCounterVec(counterOpts, []string{
