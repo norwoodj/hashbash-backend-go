@@ -7,13 +7,13 @@ WEBAPP_IMAGE=hashbash-webapp-go
 .PHONY: all
 all: consumers webapp
 
-.PHONY: consumers
 consumers: version.txt
 	docker build --tag $(DOCKER_REPOSITORY)/$(CONSUMERS_IMAGE):current --file docker/Dockerfile-consumers .
+	touch consumers
 
-.PHONY: webapp
 webapp: version.txt
 	docker build --tag $(DOCKER_REPOSITORY)/$(WEBAPP_IMAGE):current --file docker/Dockerfile-webapp .
+	touch webapp
 
 version.txt:
 	echo release-$(shell docker run --rm --entrypoint date $(GOLANG_IMAGE) --utc "+%Y%m%d-%H%M") > version.txt
@@ -29,12 +29,8 @@ push: all
 run-deps:
 	HASHBASH_HOST_IP_ADDRESS=$(shell ./get-wan-ip) docker-compose -f docker/docker-compose-hashbash-deps.yaml up
 
-.PHONY: run-no-build
-run-no-build:
-	docker-compose -f docker/docker-compose-hashbash.yaml up
-
 .PHONY: run
-run: all
+run: all volume
 	docker-compose -f docker/docker-compose-hashbash.yaml up
 
 .PHONY: clear-data
@@ -42,6 +38,10 @@ clear-data:
 	docker-compose -f docker/docker-compose-hashbash.yaml down
 	docker volume rm hashbash-data
 	docker volume create hashbash-data
+
+volume:
+	docker volume create --name=hashbash-data
+	touch volume
 
 .PHONY: clean
 clean:

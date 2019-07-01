@@ -15,3 +15,6 @@ version-poms
 cmd/hashbash-cli/hashbash-cli
 cmd/hashbash-engine/hashbash-engine
 cmd/hashbash-webapp/hashbash-webapp
+consumers
+volume
+webapp
