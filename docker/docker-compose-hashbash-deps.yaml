@@ -5,25 +5,46 @@ volumes:
     external: true
 
 services:
+  schema:
+      image: migrate/migrate:v4.5.0
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+    volumes:
+      type: bind
+      source: ./migrations
+      target: /migrations
+      read_only: true
+
   mysql:
     image: mysql:5.7
     environment:
       MYSQL_ROOT_PASSWORD: root
     ports:
-      - 3306:3306
+      - published: 3306
+        target: 3306
     volumes:
-      - hashbash-data:/var/lib/mysql
+      - type: volume
+        source: hashbash-data
+        target: /var/lib/mysql
+      - type: bind
+        source: ./migrations
+        target: /migrations
+        read_only: true
 
   rabbitmq:
     image: rabbitmq:3.6-management-alpine
     ports:
-      - 5672:5672
-      - 15672:15672
-      - 55672:55672
+      - published: 5672
+        target: 5672
+      - published: 15672
+        target: 15672
+      - published: 55672
+        target: 55672
 
   nginx:
     image: jnorwood/hashbash-nginx:release-20190425-1647
     extra_hosts:
       - hashbash-webapp:${HASHBASH_HOST_IP_ADDRESS}
     ports:
-      - 80:80
+      - published: 80
+        target: 80
