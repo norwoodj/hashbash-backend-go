@@ -1,0 +1,15 @@
+[Unit]
+Description=hashbash engine (rabbitmq consumers) service
+
+[Service]
+ExecStart=/opt/hashbash/bin/hashbash-engine
+Restart=always
+KillSignal=SIGQUIT
+Type=notify
+StandardError=syslog
+NotifyAccess=all
+EnvironmentFile=/opt/hashbash/hashbash.env
+Environment=HASHBASH_LOG_FILE=/opt/hashbash/logs/engine.log
+
+[Install]
+WantedBy=multi-user.target

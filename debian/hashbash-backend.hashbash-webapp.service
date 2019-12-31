@@ -1,0 +1,15 @@
+[Unit]
+Description=hashbash webapp service
+
+[Service]
+ExecStart=/opt/hashbash/bin/hashbash-webapp
+Restart=always
+KillSignal=SIGQUIT
+Type=notify
+StandardError=syslog
+NotifyAccess=all
+EnvironmentFile=/opt/hashbash/hashbash.env
+Environment=HASHBASH_LOG_FILE=/opt/hashbash/logs/webapp.log
+
+[Install]
+WantedBy=multi-user.target
