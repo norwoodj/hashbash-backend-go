@@ -1,6 +1,10 @@
 package main
 
 import (
+	"os"
+	"strings"
+	"sync"
+
 	"github.com/gorilla/mux"
 	"github.com/norwoodj/hashbash-backend-go/pkg/api"
 	"github.com/norwoodj/hashbash-backend-go/pkg/dao"
@@ -11,15 +15,12 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"os"
-	"strings"
-	"sync"
 )
 
 func walkRoutes(router *mux.Router) {
 	log.Debugf("Walking registered routes...")
 
-	router.Walk(func(route *mux.Route, router *mux.Router, ancestors []*mux.Route) error {
+	_ = router.Walk(func(route *mux.Route, router *mux.Router, ancestors []*mux.Route) error {
 		pathTemplate, err := route.GetPathTemplate()
 		if err == nil {
 			log.Debugf("Route: %s", pathTemplate)
@@ -49,9 +50,32 @@ func walkRoutes(router *mux.Router) {
 	})
 }
 
-func hashbashWebapp(_ *cobra.Command, _ []string) {
+func openOrCreate(logFilename string) (*os.File, error) {
+	if _, err := os.Stat(logFilename); os.IsNotExist(err) {
+		return os.Create(logFilename)
+	}
+
+	return os.Open(logFilename)
+}
+
+func setupLogging() {
 	logLevel, _ := log.ParseLevel(viper.GetString("log-level"))
 	log.SetLevel(logLevel)
+
+	logFilename := viper.GetString("log-file")
+	if logFilename != "" {
+		file, err := openOrCreate(logFilename)
+
+		if err != nil {
+			log.Errorf("Could not open log file %s", logFilename)
+		} else {
+			log.SetOutput(file)
+		}
+	}
+}
+
+func hashbashWebapp(_ *cobra.Command, _ []string) {
+	setupLogging()
 
 	util.DoInitialDelay()
 	db := database.GetConnectionOrDie()
