@@ -25,7 +25,6 @@ type RainbowTableSearch struct {
 	SearchCompleted *time.Time `json:"searchCompleted"`
 	SearchTime      *float64   `json:"searchTime"`
 	CreatedAt       *time.Time `json:"created"`
-	UpdatedAt       *time.Time `json:"lastUpdated"`
 }
 
 func ConvertRainbowTableSearchToApiModel(rainbowTableSearch model.RainbowTableSearch) RainbowTableSearch {
@@ -45,7 +44,6 @@ func ConvertRainbowTableSearchToApiModel(rainbowTableSearch model.RainbowTableSe
 		SearchCompleted: rainbowTableSearch.SearchCompleted,
 		SearchTime:      searchTimeResult,
 		CreatedAt:       rainbowTableSearch.CreatedAt,
-		UpdatedAt:       rainbowTableSearch.UpdatedAt,
 	}
 }
 

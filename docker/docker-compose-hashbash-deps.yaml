@@ -1,29 +1,49 @@
-version: "3"
-
-volumes:
-  hashbash-data:
-    external: true
+version: "3.7"
 
 services:
-  mysql:
-    image: mysql:5.7
+  postgresql:
+    image: postgres:11.5
     environment:
-      MYSQL_ROOT_PASSWORD: root
+      POSTGRES_DB: hashbash
+      POSTGRES_PASSWORD: postgres
     ports:
-      - 3306:3306
+      - published: 5432
+        target: 5432
+
+  migrate:
+    image: migrate/migrate
+    depends_on:
+      - postgresql
+    entrypoint:
+      - sh
+      - -c
+      - >
+          echo "sleeping 3 seconds to allow database to start" &&
+          sleep 3 &&
+          /migrate \
+            -database postgresql://postgres:postgres@postgresql/hashbash?sslmode=disable \
+            -source file://versions \
+            up
     volumes:
-      - hashbash-data:/var/lib/mysql
+      - type: bind
+        source: ../migrate-versions
+        target: /opt/migrate/versions
+    working_dir: /opt/migrate
 
   rabbitmq:
-    image: rabbitmq:3.6-management-alpine
+    image: rabbitmq:3.7-management-alpine
     ports:
-      - 5672:5672
-      - 15672:15672
-      - 55672:55672
+      - published: 5672
+        target: 5672
+      - published: 15672
+        target: 15672
+      - published: 55672
+        target: 55672
 
   nginx:
     image: jnorwood/hashbash-nginx:release-20190425-1647
     extra_hosts:
       - hashbash-webapp:${HASHBASH_HOST_IP_ADDRESS}
     ports:
-      - 80:80
+      - published: 80
+        target: 80

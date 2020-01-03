@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/norwoodj/hashbash-backend-go/pkg/dao"
-	"github.com/norwoodj/hashbash-backend-go/pkg/database"
 	"github.com/norwoodj/hashbash-backend-go/pkg/metrics"
 	"github.com/norwoodj/hashbash-backend-go/pkg/rabbitmq"
 	"github.com/norwoodj/hashbash-backend-go/pkg/rainbow"
@@ -58,7 +57,7 @@ func hashbashEngine(_ *cobra.Command, _ []string) {
 
 	util.DoInitialDelay()
 
-	db := database.GetConnectionOrDie()
+	db := dao.GetConnectionOrDie(viper.GetString("database-engine"))
 	rainbowTableService := dao.NewRainbowTableService(db)
 	rainbowChainService := dao.NewRainbowChainService(db)
 	rainbowTableSearchService := dao.NewRainbowTableSearchService(db)

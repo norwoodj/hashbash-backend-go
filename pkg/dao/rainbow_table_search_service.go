@@ -27,19 +27,19 @@ type RainbowTableSearchService interface {
 	UpdateRainbowTableSearchStatusPasswordAndSearchCompleted(int64, string, string) error
 }
 
-type MySQLRainbowTableSearchService struct {
+type DbRainbowTableSearchService struct {
 	databaseClient *gorm.DB
 }
 
 func NewRainbowTableSearchService(db *gorm.DB) RainbowTableSearchService {
-	return &MySQLRainbowTableSearchService{databaseClient: db}
+	return &DbRainbowTableSearchService{databaseClient: db}
 }
 
-func (service *MySQLRainbowTableSearchService) CountRainbowTableSearches(rainbowTableId int16, includeNotFound bool) int64 {
+func (service *DbRainbowTableSearchService) CountRainbowTableSearches(rainbowTableId int16, includeNotFound bool) int64 {
 	var rainbowTableSearchCount int64
 	query := service.databaseClient.
 		Model(&model.RainbowTableSearch{}).
-		Where("rainbowTableId = ?", rainbowTableId)
+		Where("rainbow_table_id = ?", rainbowTableId)
 
 	if !includeNotFound {
 		query = query.Where("status != ?", model.SearchNotFound)
@@ -49,7 +49,7 @@ func (service *MySQLRainbowTableSearchService) CountRainbowTableSearches(rainbow
 	return rainbowTableSearchCount
 }
 
-func (service *MySQLRainbowTableSearchService) CreateRainbowTableSearch(rainbowTableId int16, hash string) (model.RainbowTableSearch, error) {
+func (service *DbRainbowTableSearchService) CreateRainbowTableSearch(rainbowTableId int16, hash string) (model.RainbowTableSearch, error) {
 	var rainbowTable model.RainbowTable
 	service.databaseClient.
 		Where("id = ?", rainbowTableId).
@@ -76,14 +76,14 @@ func (service *MySQLRainbowTableSearchService) CreateRainbowTableSearch(rainbowT
 	return rainbowTableSearch, err
 }
 
-func (service *MySQLRainbowTableSearchService) ListSearchesByRainbowTableId(
+func (service *DbRainbowTableSearchService) ListSearchesByRainbowTableId(
 	rainbowTableId int16,
 	includeNotFound bool,
 	pageConfig PageConfig,
 ) []model.RainbowTableSearch {
 	rainbowTableSearches := make([]model.RainbowTableSearch, 0)
 	query := applyPaging(service.databaseClient, pageConfig).
-		Where("rainbowTableId = ?", rainbowTableId)
+		Where("rainbow_table_id = ?", rainbowTableId)
 
 	if !includeNotFound {
 		query = query.Where("status != ?", model.SearchNotFound)
@@ -93,12 +93,12 @@ func (service *MySQLRainbowTableSearchService) ListSearchesByRainbowTableId(
 	return rainbowTableSearches
 }
 
-func (service *MySQLRainbowTableSearchService) GetRainbowTableSearchResults(rainbowTableId int16) RainbowTableSearchResultSummary {
+func (service *DbRainbowTableSearchService) GetRainbowTableSearchResults(rainbowTableId int16) RainbowTableSearchResultSummary {
 	searchResults := make([]RainbowTableSearchResults, 0)
 	service.databaseClient.
 		Model(&model.RainbowTableSearch{}).
 		Select("status, COUNT(*) AS count").
-		Where("rainbowTableId = ? and status IN (?)", rainbowTableId, []string{model.SearchFound, model.SearchNotFound}).
+		Where("rainbow_table_id = ? and status IN (?)", rainbowTableId, []string{model.SearchFound, model.SearchNotFound}).
 		Group("status").
 		Scan(&searchResults)
 
@@ -115,7 +115,7 @@ func (service *MySQLRainbowTableSearchService) GetRainbowTableSearchResults(rain
 	return searchResultSummary
 }
 
-func (service *MySQLRainbowTableSearchService) FindRainbowTableSearchById(searchId int64) model.RainbowTableSearch {
+func (service *DbRainbowTableSearchService) FindRainbowTableSearchById(searchId int64) model.RainbowTableSearch {
 	var rainbowTableSearch model.RainbowTableSearch
 
 	service.databaseClient.
@@ -125,24 +125,24 @@ func (service *MySQLRainbowTableSearchService) FindRainbowTableSearchById(search
 	return rainbowTableSearch
 }
 
-func (service *MySQLRainbowTableSearchService) UpdateRainbowTableSearchStatus(searchId int64, status string) error {
+func (service *DbRainbowTableSearchService) UpdateRainbowTableSearchStatus(searchId int64, status string) error {
 	return service.databaseClient.
 		Model(&model.RainbowTableSearch{ID: searchId}).
 		Update("status", status).
 		Error
 }
 
-func (service *MySQLRainbowTableSearchService) UpdateRainbowTableSearchStatusAndSearchStarted(searchId int64, status string) error {
+func (service *DbRainbowTableSearchService) UpdateRainbowTableSearchStatusAndSearchStarted(searchId int64, status string) error {
 	return service.databaseClient.
 		Model(&model.RainbowTableSearch{ID: searchId}).
 		Updates(map[string]interface{}{
 			"status":        status,
-			"searchStarted": time.Now(),
+			"search_started": time.Now(),
 		}).
 		Error
 }
 
-func (service *MySQLRainbowTableSearchService) UpdateRainbowTableSearchStatusPasswordAndSearchCompleted(
+func (service *DbRainbowTableSearchService) UpdateRainbowTableSearchStatusPasswordAndSearchCompleted(
 	searchId int64,
 	status string,
 	password string,
@@ -152,7 +152,7 @@ func (service *MySQLRainbowTableSearchService) UpdateRainbowTableSearchStatusPas
 		Updates(map[string]interface{}{
 			"status":          status,
 			"password":        password,
-			"searchCompleted": time.Now(),
+			"search_completed": time.Now(),
 		}).
 		Error
 }

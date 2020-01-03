@@ -4,12 +4,12 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"github.com/norwoodj/hashbash-backend-go/pkg/api_model"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"strconv"
 
+	"github.com/norwoodj/hashbash-backend-go/pkg/api_model"
 	"github.com/norwoodj/hashbash-backend-go/pkg/rainbow"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"

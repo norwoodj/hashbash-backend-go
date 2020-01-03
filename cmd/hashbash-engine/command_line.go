@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/norwoodj/hashbash-backend-go/pkg/database"
+	"github.com/norwoodj/hashbash-backend-go/pkg/dao"
 	"github.com/norwoodj/hashbash-backend-go/pkg/rabbitmq"
 	"github.com/norwoodj/hashbash-backend-go/pkg/util"
 	"github.com/spf13/cobra"
@@ -26,7 +26,7 @@ func newRootCommand(version string) *cobra.Command {
 	engineFlags.Int("search-num-threads", 8, "The number of threads to use when searching rainbow tables")
 
 	util.AddDefaultFlags(engineFlags)
-	database.AddDatabaseFlags(engineFlags)
+	dao.AddDatabaseFlags(engineFlags)
 	rabbitmq.AddRabbitMqFlags(engineFlags)
 
 	viper.AutomaticEnv()

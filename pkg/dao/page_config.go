@@ -2,7 +2,6 @@ package dao
 
 import (
 	"github.com/jinzhu/gorm"
-	"github.com/norwoodj/hashbash-backend-go/pkg/database"
 )
 
 type PageConfig struct {
@@ -15,5 +14,13 @@ type PageConfig struct {
 func applyPaging(db *gorm.DB, pageConfig PageConfig) *gorm.DB {
 	limit := pageConfig.PageSize
 	offset := pageConfig.PageNumber * pageConfig.PageSize
-	return database.ApplyPaging(db, limit, offset, pageConfig.SortKey, pageConfig.Descending)
+
+	orderClause := pageConfig.SortKey
+	if pageConfig.Descending {
+		orderClause += " DESC"
+	}
+
+	return db.Limit(limit).
+		Offset(offset).
+		Order(orderClause)
 }

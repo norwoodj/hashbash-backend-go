@@ -4,7 +4,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/norwoodj/hashbash-backend-go/pkg/database"
+	"github.com/norwoodj/hashbash-backend-go/pkg/dao"
 	"github.com/norwoodj/hashbash-backend-go/pkg/frontend"
 	"github.com/norwoodj/hashbash-backend-go/pkg/rabbitmq"
 	"github.com/norwoodj/hashbash-backend-go/pkg/util"
@@ -25,7 +25,7 @@ func newRootCommand(version string) *cobra.Command {
 	webappFlags.IntP("web-port", "w", 8080, "Port on which to serve the hashbash webapp")
 
 	util.AddDefaultFlags(webappFlags)
-	database.AddDatabaseFlags(webappFlags)
+	dao.AddDatabaseFlags(webappFlags)
 	frontend.AddFrontendFlags(webappFlags)
 	rabbitmq.AddRabbitMqFlags(webappFlags)
 

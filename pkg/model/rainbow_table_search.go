@@ -9,14 +9,13 @@ const SearchNotFound = "NOT_FOUND"
 
 type RainbowTableSearch struct {
 	ID              int64      `gorm:"primary_key,column:id"`
-	RainbowTableId  int16      `gorm:"column:rainbowTableId"`
+	RainbowTableId  int16      `gorm:"column:rainbow_table_id"`
 	Hash            string     `gorm:"column:hash"`
 	Status          string     `gorm:"column:status"`
-	Password        string     `gorm:"password"`
-	SearchStarted   *time.Time `gorm:"column:searchStarted"`
-	SearchCompleted *time.Time `gorm:"column:searchCompleted"`
+	Password        string     `gorm:"column:password"`
+	SearchStarted   *time.Time `gorm:"column:search_started"`
+	SearchCompleted *time.Time `gorm:"column:search_completed"`
 	CreatedAt       *time.Time `gorm:"column:created"`
-	UpdatedAt       *time.Time `gorm:"column:lastUpdated"`
 }
 
 func (RainbowTableSearch) TableName() string {

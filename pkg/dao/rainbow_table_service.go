@@ -19,15 +19,15 @@ type RainbowTableService interface {
 	UpdateRainbowTableStatusAndGenerateStarted(int16, string) error
 }
 
-type MySQLRainbowTableService struct {
+type DbRainbowTableService struct {
 	databaseClient *gorm.DB
 }
 
 func NewRainbowTableService(db *gorm.DB) RainbowTableService {
-	return &MySQLRainbowTableService{databaseClient: db}
+	return &DbRainbowTableService{databaseClient: db}
 }
 
-func (service *MySQLRainbowTableService) CreateRainbowTable(rainbowTable *model.RainbowTable) (*model.RainbowTable, error) {
+func (service *DbRainbowTableService) CreateRainbowTable(rainbowTable *model.RainbowTable) (*model.RainbowTable, error) {
 	if service.FindRainbowTableByName(rainbowTable.Name).Name != "" {
 		return nil, RainbowTableExistsError{Name: rainbowTable.Name}
 	}
@@ -39,7 +39,7 @@ func (service *MySQLRainbowTableService) CreateRainbowTable(rainbowTable *model.
 	return rainbowTable, err
 }
 
-func (service *MySQLRainbowTableService) CountRainbowTables() int64 {
+func (service *DbRainbowTableService) CountRainbowTables() int64 {
 	var rainbowTableCount int64
 	service.databaseClient.
 		Model(&model.RainbowTable{}).
@@ -48,7 +48,7 @@ func (service *MySQLRainbowTableService) CountRainbowTables() int64 {
 	return rainbowTableCount
 }
 
-func (service *MySQLRainbowTableService) ListRainbowTables(pageConfig PageConfig) []model.RainbowTable {
+func (service *DbRainbowTableService) ListRainbowTables(pageConfig PageConfig) []model.RainbowTable {
 	rainbowTables := make([]model.RainbowTable, 0)
 
 	applyPaging(service.databaseClient, pageConfig).
@@ -57,7 +57,7 @@ func (service *MySQLRainbowTableService) ListRainbowTables(pageConfig PageConfig
 	return rainbowTables
 }
 
-func (service *MySQLRainbowTableService) FindRainbowTableById(rainbowTableId int16) model.RainbowTable {
+func (service *DbRainbowTableService) FindRainbowTableById(rainbowTableId int16) model.RainbowTable {
 	var rainbowTable model.RainbowTable
 	service.databaseClient.
 		Where("id = ?", rainbowTableId).
@@ -66,7 +66,7 @@ func (service *MySQLRainbowTableService) FindRainbowTableById(rainbowTableId int
 	return rainbowTable
 }
 
-func (service *MySQLRainbowTableService) FindRainbowTableByName(name string) model.RainbowTable {
+func (service *DbRainbowTableService) FindRainbowTableByName(name string) model.RainbowTable {
 	var rainbowTable model.RainbowTable
 	service.databaseClient.
 		Where("name = ?", name).
@@ -75,7 +75,7 @@ func (service *MySQLRainbowTableService) FindRainbowTableByName(name string) mod
 	return rainbowTable
 }
 
-func (service *MySQLRainbowTableService) DeleteRainbowTableById(id int16) error {
+func (service *DbRainbowTableService) DeleteRainbowTableById(id int16) error {
 	var rainbowTable model.RainbowTable
 	service.databaseClient.
 		Where("id = ?", id).
@@ -90,35 +90,35 @@ func (service *MySQLRainbowTableService) DeleteRainbowTableById(id int16) error 
 		Error
 }
 
-func (service *MySQLRainbowTableService) UpdateRainbowTableStatus(id int16, status string) error {
+func (service *DbRainbowTableService) UpdateRainbowTableStatus(id int16, status string) error {
 	return service.databaseClient.
 		Model(&model.RainbowTable{ID: id}).
 		Update("status", status).
 		Error
 }
 
-func (service *MySQLRainbowTableService) UpdateRainbowTableStatusAndGenerateStarted(id int16, status string) error {
+func (service *DbRainbowTableService) UpdateRainbowTableStatusAndGenerateStarted(id int16, status string) error {
 	return service.databaseClient.
 		Model(&model.RainbowTable{ID: id}).
 		Updates(map[string]interface{}{
-			"status":          status,
-			"generateStarted": time.Now(),
+			"status":           status,
+			"generate_started": time.Now(),
 		}).Error
 }
 
-func (service *MySQLRainbowTableService) UpdateRainbowTableStatusAndFinalChainCount(id int16, status string, finalChainCount int64) error {
+func (service *DbRainbowTableService) UpdateRainbowTableStatusAndFinalChainCount(id int16, status string, finalChainCount int64) error {
 	return service.databaseClient.
 		Model(&model.RainbowTable{ID: id}).
 		Updates(map[string]interface{}{
-			"finalChainCount":   finalChainCount,
-			"generateCompleted": time.Now(),
-			"status":            status,
+			"final_chain_count":  finalChainCount,
+			"generate_completed": time.Now(),
+			"status":             status,
 		}).Error
 }
 
-func (service *MySQLRainbowTableService) IncrementRainbowTableChainsGenerated(id int16, chainsGenerated int64) error {
+func (service *DbRainbowTableService) IncrementRainbowTableChainsGenerated(id int16, chainsGenerated int64) error {
 	return service.databaseClient.
 		Model(&model.RainbowTable{ID: id}).
-		Update("chainsGenerated", gorm.Expr("chainsGenerated + ?", chainsGenerated)).
+		Update("chains_generated", gorm.Expr("chains_generated + ?", chainsGenerated)).
 		Error
 }

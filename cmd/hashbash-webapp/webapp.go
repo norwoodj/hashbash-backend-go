@@ -8,7 +8,6 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/norwoodj/hashbash-backend-go/pkg/api"
 	"github.com/norwoodj/hashbash-backend-go/pkg/dao"
-	"github.com/norwoodj/hashbash-backend-go/pkg/database"
 	"github.com/norwoodj/hashbash-backend-go/pkg/frontend"
 	"github.com/norwoodj/hashbash-backend-go/pkg/rabbitmq"
 	"github.com/norwoodj/hashbash-backend-go/pkg/util"
@@ -78,7 +77,7 @@ func hashbashWebapp(_ *cobra.Command, _ []string) {
 	setupLogging()
 
 	util.DoInitialDelay()
-	db := database.GetConnectionOrDie()
+	db := dao.GetConnectionOrDie(viper.GetString("database-engine"))
 	rainbowTableService := dao.NewRainbowTableService(db)
 	rainbowTableSearchService := dao.NewRainbowTableSearchService(db)
 
