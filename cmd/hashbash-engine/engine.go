@@ -57,9 +57,10 @@ func hashbashEngine(_ *cobra.Command, _ []string) {
 
 	util.DoInitialDelay()
 
-	db := dao.GetConnectionOrDie(viper.GetString("database-engine"))
+	dbEngine := viper.GetString("database-engine")
+	db := dao.GetConnectionOrDie(dbEngine)
 	rainbowTableService := dao.NewRainbowTableService(db)
-	rainbowChainService := dao.NewRainbowChainService(db)
+	rainbowChainService := dao.NewRainbowChainService(db, dbEngine)
 	rainbowTableSearchService := dao.NewRainbowTableSearchService(db)
 
 	generateJobConfig := rainbow.TableGenerateJobConfig{

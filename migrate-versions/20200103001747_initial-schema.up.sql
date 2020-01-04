@@ -17,12 +17,6 @@ CREATE TABLE rainbow_table
     UNIQUE (name)
 );
 
-CREATE INDEX ON rainbow_table (num_chains);
-CREATE INDEX ON rainbow_table (chain_length);
-CREATE INDEX ON rainbow_table (password_length);
-CREATE INDEX ON rainbow_table (hash_function);
-CREATE INDEX ON rainbow_table (final_chain_count);
-
 
 CREATE TABLE rainbow_chain
 (
@@ -36,7 +30,7 @@ CREATE TABLE rainbow_chain
 
 CREATE TABLE rainbow_table_search
 (
-    id               BIGINT    NOT NULL,
+    id               BIGSERIAL NOT NULL,
     rainbow_table_id SMALLINT  NOT NULL,
     hash             VARCHAR   NOT NULL,
     status           VARCHAR   NOT NULL,

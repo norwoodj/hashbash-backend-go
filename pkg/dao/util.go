@@ -20,11 +20,11 @@ func isValidHash(hashFunctionName string, hash string) bool {
 }
 
 func AddDatabaseFlags(flags *pflag.FlagSet) {
-	flags.String("database-engine", "mysql", "The type of database backend to use (mysql or postgresql)")
+	flags.String("database-engine", "postgres", "The type of database backend to use (mysql or postgresql)")
 	flags.String("database-host", "localhost", "The hostname or IP address of the hashbash database")
-	flags.String("database-ssl-mode", "enable", "Whether to use SSL in connecting to the database")
-	flags.String("database-username", "root", "The username with which to authenticate to the database")
-	flags.String("database-password", "root", "The password with which to authenticate to the database")
+	flags.String("database-ssl-mode", "require", "Whether to use SSL in connecting to the database")
+	flags.String("database-username", "postgres", "The username with which to authenticate to the database")
+	flags.String("database-password", "postgres", "The password with which to authenticate to the database")
 }
 
 func getMysqlConnection() (*gorm.DB, error) {

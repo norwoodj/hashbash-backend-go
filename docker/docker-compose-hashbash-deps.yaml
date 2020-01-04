@@ -41,9 +41,9 @@ services:
         target: 55672
 
   nginx:
-    image: jnorwood/hashbash-nginx:release-20190425-1647
+    image: jnorwood/hashbash-nginx:current
     extra_hosts:
       - hashbash-webapp:${HASHBASH_HOST_IP_ADDRESS}
     ports:
-      - published: 80
+      - published: 23081
         target: 80
