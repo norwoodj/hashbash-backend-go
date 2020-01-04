@@ -9,8 +9,7 @@ version.txt
 hashbash-cli
 hashbash-engine
 hashbash-webapp
-consumers
-volume
+engine
 webapp
 debian/.debhelper/
 debian/debhelper-build-stamp

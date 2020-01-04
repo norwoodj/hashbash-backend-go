@@ -1,5 +1,5 @@
 [Unit]
-Description=hashbash engine (rabbitmq consumers) service
+Description=hashbash engine service
 
 [Service]
 ExecStart=/opt/hashbash/bin/hashbash-engine
@@ -10,6 +10,7 @@ StandardError=syslog
 NotifyAccess=all
 EnvironmentFile=/opt/hashbash/hashbash.env
 Environment=HASHBASH_LOG_FILE=/opt/hashbash/logs/engine.log
+Environment=HASHBASH_MANAGEMENT_PORT=8082
 
 [Install]
 WantedBy=multi-user.target

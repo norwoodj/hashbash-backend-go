@@ -79,7 +79,7 @@ run-deps:
 	HASHBASH_HOST_IP_ADDRESS=$(shell ./get-wan-ip) docker-compose -f docker/docker-compose-hashbash-deps.yaml up
 
 .PHONY: run
-run: images
+run:
 	HASHBASH_HOST_IP_ADDRESS=$(shell ./get-wan-ip) docker-compose -f docker/docker-compose-hashbash.yaml up
 
 
