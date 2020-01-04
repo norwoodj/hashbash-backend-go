@@ -1,3 +1,4 @@
+frontend /opt/hashbash
 hashbash.env /opt/hashbash
 hashbash-cli /opt/hashbash/bin
 hashbash-engine /opt/hashbash/bin
