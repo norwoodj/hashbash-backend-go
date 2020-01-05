@@ -52,8 +52,11 @@ func startConsumersAndHandleSignals(
 }
 
 func hashbashEngine(_ *cobra.Command, _ []string) {
-	logLevel, _ := log.ParseLevel(viper.GetString("log-level"))
-	log.SetLevel(logLevel)
+	_, err := util.SetupLogging()
+	if err != nil {
+		log.Error(err)
+		os.Exit(1)
+	}
 
 	util.DoInitialDelay()
 

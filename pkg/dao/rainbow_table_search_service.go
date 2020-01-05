@@ -136,7 +136,7 @@ func (service *DbRainbowTableSearchService) UpdateRainbowTableSearchStatusAndSea
 	return service.databaseClient.
 		Model(&model.RainbowTableSearch{ID: searchId}).
 		Updates(map[string]interface{}{
-			"status":        status,
+			"status":         status,
 			"search_started": time.Now(),
 		}).
 		Error
@@ -150,8 +150,8 @@ func (service *DbRainbowTableSearchService) UpdateRainbowTableSearchStatusPasswo
 	return service.databaseClient.
 		Model(&model.RainbowTableSearch{ID: searchId}).
 		Updates(map[string]interface{}{
-			"status":          status,
-			"password":        password,
+			"status":           status,
+			"password":         password,
 			"search_completed": time.Now(),
 		}).
 		Error

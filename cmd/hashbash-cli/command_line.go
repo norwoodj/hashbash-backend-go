@@ -8,10 +8,11 @@ import (
 	"github.com/spf13/viper"
 )
 
-func newRootCommand() *cobra.Command {
+func newRootCommand(version string) *cobra.Command {
 	var rootCmd = &cobra.Command{
-		Use:   "hashbash-cli",
-		Short: "CLI for automating various hashbash related tasks",
+		Use:     "hashbash-cli",
+		Short:   "CLI for automating various hashbash related tasks",
+		Version: version,
 	}
 
 	util.AddDefaultFlags(rootCmd.PersistentFlags())

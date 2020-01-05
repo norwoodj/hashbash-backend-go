@@ -9,7 +9,7 @@ RUN apk add --no-cache git \
 
 COPY . /opt/hashbash/
 WORKDIR /opt/hashbash/cmd/hashbash-engine
-RUN go build -ldflags "-X main.Version=$(cat /opt/hashbash/version.txt)"
+RUN go build -ldflags "-X main.version=$(cat /opt/hashbash/version.txt)"
 
 
 # Copy built binary into the final image

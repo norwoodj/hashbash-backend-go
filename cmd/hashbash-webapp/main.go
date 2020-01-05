@@ -9,7 +9,6 @@ import (
 var version string
 
 func main() {
-	log.SetFormatter(&log.TextFormatter{FullTimestamp: true})
 	rootCmd := newRootCommand(version)
 
 	if err := rootCmd.Execute(); err != nil {

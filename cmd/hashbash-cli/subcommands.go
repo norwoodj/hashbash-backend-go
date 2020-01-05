@@ -11,6 +11,7 @@ import (
 
 	"github.com/norwoodj/hashbash-backend-go/pkg/api_model"
 	"github.com/norwoodj/hashbash-backend-go/pkg/rainbow"
+	"github.com/norwoodj/hashbash-backend-go/pkg/util"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -96,6 +97,12 @@ func submitSearchRequests(
 }
 
 func searchCommandFn(_ *cobra.Command, args []string) {
+	_, err := util.SetupLogging()
+	if err != nil {
+		log.Error(err)
+		os.Exit(1)
+	}
+
 	hashbashHost := viper.GetString("hashbash-host")
 	rainbowTableId, numPasswords := parseCliArgs(args)
 	rainbowTable := retrieveRainbowTable(hashbashHost, rainbowTableId)

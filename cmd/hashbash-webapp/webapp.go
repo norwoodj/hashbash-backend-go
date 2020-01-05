@@ -5,6 +5,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/norwoodj/hashbash-backend-go/pkg/api"
 	"github.com/norwoodj/hashbash-backend-go/pkg/dao"
@@ -49,34 +50,15 @@ func walkRoutes(router *mux.Router) {
 	})
 }
 
-func openOrCreate(logFilename string) (*os.File, error) {
-	if _, err := os.Stat(logFilename); os.IsNotExist(err) {
-		return os.Create(logFilename)
-	}
-
-	return os.Open(logFilename)
-}
-
-func setupLogging() {
-	logLevel, _ := log.ParseLevel(viper.GetString("log-level"))
-	log.SetLevel(logLevel)
-
-	logFilename := viper.GetString("log-file")
-	if logFilename != "" {
-		file, err := openOrCreate(logFilename)
-
-		if err != nil {
-			log.Errorf("Could not open log file %s", logFilename)
-		} else {
-			log.SetOutput(file)
-		}
-	}
-}
-
 func hashbashWebapp(_ *cobra.Command, _ []string) {
-	setupLogging()
+	logFile, err := util.SetupLogging()
+	if err != nil {
+		log.Error(err)
+		os.Exit(1)
+	}
 
 	util.DoInitialDelay()
+
 	db := dao.GetConnectionOrDie(viper.GetString("database-engine"))
 	rainbowTableService := dao.NewRainbowTableService(db)
 	rainbowTableSearchService := dao.NewRainbowTableSearchService(db)
@@ -102,12 +84,13 @@ func hashbashWebapp(_ *cobra.Command, _ []string) {
 	}
 
 	walkRoutes(router)
+	loggedRouter := handlers.LoggingHandler(logFile, router)
 
 	waitGroup := sync.WaitGroup{}
 	waitGroup.Add(2)
 	webPort := viper.GetInt("web-port")
 
 	go util.StartManagementServer(&waitGroup)
-	go util.StartHttpServer(webPort, "hashbash webapp", router, &waitGroup)
+	go util.StartHttpServer(webPort, "hashbash webapp", loggedRouter, &waitGroup)
 	waitGroup.Wait()
 }
