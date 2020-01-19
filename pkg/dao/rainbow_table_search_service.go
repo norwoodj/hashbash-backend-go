@@ -17,11 +17,11 @@ type RainbowTableSearchResultSummary struct {
 }
 
 type RainbowTableSearchService interface {
-	CountRainbowTableSearches(rainbowTableId int16, includeNotFound bool) int64
+	CountRainbowTableSearches(rainbowTableId int16, includeNotFound bool) (int64, error)
 	CreateRainbowTableSearch(rainbowTableId int16, hash string) (model.RainbowTableSearch, error)
-	ListSearchesByRainbowTableId(rainbowTableId int16, includeNotFound bool, pageConfig PageConfig) []model.RainbowTableSearch
-	GetRainbowTableSearchResults(rainbowTableId int16) RainbowTableSearchResultSummary
-	FindRainbowTableSearchById(int64) model.RainbowTableSearch
+	ListSearchesByRainbowTableId(rainbowTableId int16, includeNotFound bool, pageConfig PageConfig) ([]model.RainbowTableSearch, error)
+	GetRainbowTableSearchResults(rainbowTableId int16) (RainbowTableSearchResultSummary, error)
+	FindRainbowTableSearchById(int64) (model.RainbowTableSearch, error)
 	UpdateRainbowTableSearchStatus(int64, string) error
 	UpdateRainbowTableSearchStatusAndSearchStarted(int64, string) error
 	UpdateRainbowTableSearchStatusPasswordAndSearchCompleted(int64, string, string) error
@@ -35,7 +35,7 @@ func NewRainbowTableSearchService(db *gorm.DB) RainbowTableSearchService {
 	return &DbRainbowTableSearchService{databaseClient: db}
 }
 
-func (service *DbRainbowTableSearchService) CountRainbowTableSearches(rainbowTableId int16, includeNotFound bool) int64 {
+func (service *DbRainbowTableSearchService) CountRainbowTableSearches(rainbowTableId int16, includeNotFound bool) (int64, error) {
 	var rainbowTableSearchCount int64
 	query := service.databaseClient.
 		Model(&model.RainbowTableSearch{}).
@@ -45,8 +45,8 @@ func (service *DbRainbowTableSearchService) CountRainbowTableSearches(rainbowTab
 		query = query.Where("status != ?", model.SearchNotFound)
 	}
 
-	query.Count(&rainbowTableSearchCount)
-	return rainbowTableSearchCount
+	err := query.Count(&rainbowTableSearchCount).Error
+	return rainbowTableSearchCount, err
 }
 
 func (service *DbRainbowTableSearchService) CreateRainbowTableSearch(rainbowTableId int16, hash string) (model.RainbowTableSearch, error) {
@@ -80,7 +80,7 @@ func (service *DbRainbowTableSearchService) ListSearchesByRainbowTableId(
 	rainbowTableId int16,
 	includeNotFound bool,
 	pageConfig PageConfig,
-) []model.RainbowTableSearch {
+) ([]model.RainbowTableSearch, error) {
 	rainbowTableSearches := make([]model.RainbowTableSearch, 0)
 	query := applyPaging(service.databaseClient, pageConfig).
 		Where("rainbow_table_id = ?", rainbowTableId)
@@ -89,18 +89,23 @@ func (service *DbRainbowTableSearchService) ListSearchesByRainbowTableId(
 		query = query.Where("status != ?", model.SearchNotFound)
 	}
 
-	query.Find(&rainbowTableSearches)
-	return rainbowTableSearches
+	err := query.Find(&rainbowTableSearches). Error
+	return rainbowTableSearches, err
 }
 
-func (service *DbRainbowTableSearchService) GetRainbowTableSearchResults(rainbowTableId int16) RainbowTableSearchResultSummary {
+func (service *DbRainbowTableSearchService) GetRainbowTableSearchResults(rainbowTableId int16) (RainbowTableSearchResultSummary, error) {
 	searchResults := make([]RainbowTableSearchResults, 0)
-	service.databaseClient.
+	err := service.databaseClient.
 		Model(&model.RainbowTableSearch{}).
 		Select("status, COUNT(*) AS count").
 		Where("rainbow_table_id = ? and status IN (?)", rainbowTableId, []string{model.SearchFound, model.SearchNotFound}).
 		Group("status").
-		Scan(&searchResults)
+		Scan(&searchResults).
+		Error
+
+	if err != nil {
+		return RainbowTableSearchResultSummary{}, err
+	}
 
 	var searchResultSummary RainbowTableSearchResultSummary
 
@@ -112,17 +117,18 @@ func (service *DbRainbowTableSearchService) GetRainbowTableSearchResults(rainbow
 		searchResultSummary.TotalSearches += result.Count
 	}
 
-	return searchResultSummary
+	return searchResultSummary, nil
 }
 
-func (service *DbRainbowTableSearchService) FindRainbowTableSearchById(searchId int64) model.RainbowTableSearch {
+func (service *DbRainbowTableSearchService) FindRainbowTableSearchById(searchId int64) (model.RainbowTableSearch, error) {
 	var rainbowTableSearch model.RainbowTableSearch
 
-	service.databaseClient.
+	err := service.databaseClient.
 		Where("id = ?", searchId).
-		First(&rainbowTableSearch)
+		First(&rainbowTableSearch).
+		Error
 
-	return rainbowTableSearch
+	return rainbowTableSearch, err
 }
 
 func (service *DbRainbowTableSearchService) UpdateRainbowTableSearchStatus(searchId int64, status string) error {

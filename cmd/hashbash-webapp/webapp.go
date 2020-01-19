@@ -51,10 +51,14 @@ func walkRoutes(router *mux.Router) {
 }
 
 func hashbashWebapp(_ *cobra.Command, _ []string) {
-	logFile, err := util.SetupLogging()
+	logFile, doClose, err := util.SetupLogging()
 	if err != nil {
 		log.Error(err)
 		os.Exit(1)
+	}
+
+	if doClose {
+		defer logFile.Close()
 	}
 
 	util.DoInitialDelay()

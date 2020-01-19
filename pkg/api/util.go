@@ -1,6 +1,7 @@
 package api
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/gorilla/mux"
 	"net/http"
@@ -67,6 +68,12 @@ func getIdPathParamValue(
 	}
 
 	return id, nil
+}
+
+func unexpectedError(err error, writer http.ResponseWriter) {
+	writer.WriteHeader(http.StatusInternalServerError)
+	json.NewEncoder(writer).
+		Encode(map[string]string{"error": err.Error()})
 }
 
 func convertRainbowTableId(rainbowTableId interface{}) int16 {

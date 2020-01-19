@@ -41,37 +41,27 @@ func DoInitialDelay() {
 	}
 }
 
-func OpenOrCreate(filename string) (*os.File, error) {
-	if _, err := os.Stat(filename); os.IsNotExist(err) {
-		return os.Create(filename)
-	}
-
-	return os.Open(filename)
-}
-
-func SetupLogging() (*os.File, error) {
+func SetupLogging() (*os.File, bool, error) {
 	logLevel, err := log.ParseLevel(viper.GetString("log-level"))
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse log level %s: %s", logLevel, err)
+		return nil, false, fmt.Errorf("failed to parse log level %s: %s", logLevel, err)
 	}
 
 	log.SetLevel(logLevel)
 	log.SetFormatter(&log.TextFormatter{FullTimestamp: true})
 
 	logFilename := viper.GetString("log-file")
-
 	if logFilename == "" {
-		return os.Stdout, nil
+		return os.Stdout, false, nil
 	}
 
-	file, err := OpenOrCreate(logFilename)
-
+	file, err := os.OpenFile(logFilename, os.O_APPEND | os.O_CREATE | os.O_RDWR, 0666)
 	if err != nil {
-		return nil, fmt.Errorf("could not open log file %s: %s", logFilename, err)
+		return nil, false, fmt.Errorf("could not open log file %s: %s", logFilename, err)
 	}
 
 	log.SetOutput(file)
-	return file, nil
+	return file, true, nil
 }
 
 func startServerAndHandleSignals(server *http.Server, serverName string, port int, shutdownTimeout time.Duration) {

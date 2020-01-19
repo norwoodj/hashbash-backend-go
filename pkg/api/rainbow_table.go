@@ -3,6 +3,7 @@ package api
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/jinzhu/gorm"
 	"github.com/norwoodj/hashbash-backend-go/pkg/api_model"
 	"github.com/norwoodj/hashbash-backend-go/pkg/model"
 	"github.com/norwoodj/hashbash-backend-go/pkg/rabbitmq"
@@ -79,7 +80,12 @@ func getListRainbowTablesHandler(rainbowTableService dao.RainbowTableService) fu
 			return
 		}
 
-		rainbowTables := rainbowTableService.ListRainbowTables(pageConfig)
+		rainbowTables, err := rainbowTableService.ListRainbowTables(pageConfig)
+		if err != nil {
+			unexpectedError(err, writer)
+			return
+		}
+
 		writer.Header().Set("Content-Type", "application/json")
 		json.
 			NewEncoder(writer).
@@ -94,7 +100,11 @@ func getRainbowTableByIdHandler(rainbowTableService dao.RainbowTableService) fun
 			return
 		}
 
-		rainbowTable := rainbowTableService.FindRainbowTableById(convertRainbowTableId(rainbowTableId))
+		rainbowTable, err := rainbowTableService.FindRainbowTableById(convertRainbowTableId(rainbowTableId))
+		if err != nil {
+			unexpectedError(err, writer)
+			return
+		}
 
 		if rainbowTable.Name == "" {
 			writer.WriteHeader(http.StatusNotFound)
@@ -110,7 +120,12 @@ func getRainbowTableByIdHandler(rainbowTableService dao.RainbowTableService) fun
 
 func getCountRainbowTablesHandler(rainbowTableService dao.RainbowTableService) func(writer http.ResponseWriter, request *http.Request) {
 	return func(writer http.ResponseWriter, request *http.Request) {
-		rainbowTableCount := rainbowTableService.CountRainbowTables()
+		rainbowTableCount, err := rainbowTableService.CountRainbowTables()
+		if err != nil {
+			unexpectedError(err, writer)
+			return
+		}
+
 		writer.Header().Set("Content-Type", "application/json")
 		json.
 			NewEncoder(writer).
@@ -207,7 +222,7 @@ func getGenerateRainbowTableJsonHandler(
 
 		if err != nil {
 			log.Warnf("Failed to read request body: %s", err)
-			writer.WriteHeader(http.StatusInternalServerError)
+			unexpectedError(err, writer)
 			return
 		}
 
@@ -216,7 +231,7 @@ func getGenerateRainbowTableJsonHandler(
 
 		if err != nil {
 			log.Warnf("Failed to unmarshal generateRainbowTable request: %s", err)
-			writer.WriteHeader(http.StatusInternalServerError)
+			unexpectedError(err, writer)
 			return
 		}
 
@@ -242,7 +257,7 @@ func getGenerateRainbowTableJsonHandler(
 			}
 
 			log.Errorf("Failed to publish generateRainbowTable request: %s", err)
-			writer.WriteHeader(http.StatusInternalServerError)
+			unexpectedError(err, writer)
 			return
 		}
 
@@ -261,9 +276,12 @@ func deleteRainbowTableByIdHandler(
 			return
 		}
 
-		rainbowTable := rainbowTableService.FindRainbowTableById(convertRainbowTableId(rainbowTableId))
-		if rainbowTable.Name == "" {
+		rainbowTable, err := rainbowTableService.FindRainbowTableById(convertRainbowTableId(rainbowTableId))
+		if gorm.IsRecordNotFoundError(err) {
 			writer.WriteHeader(http.StatusNotFound)
+			return
+		} else if err != nil {
+			unexpectedError(err, writer)
 			return
 		}
 
@@ -272,7 +290,7 @@ func deleteRainbowTableByIdHandler(
 
 		if err != nil {
 			log.Errorf("Failed to publish deleteRainbowTable request: %s", err)
-			writer.WriteHeader(http.StatusInternalServerError)
+			unexpectedError(err, writer)
 			return
 		}
 

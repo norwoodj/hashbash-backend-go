@@ -2,6 +2,7 @@ package rainbow
 
 import (
 	"fmt"
+	"github.com/jinzhu/gorm"
 	"sync/atomic"
 
 	"github.com/norwoodj/hashbash-backend-go/pkg/dao"
@@ -172,8 +173,16 @@ func (service *TableGeneratorJobService) awaitChainGenerationCompletionOrErrors(
 }
 
 func (service *TableGeneratorJobService) updateFinalChainCountAndStatus(rainbowTable *model.RainbowTable) error {
-	finalChainCount := service.rainbowChainService.CountChainsForRainbowTable(rainbowTable.ID)
-	err := service.rainbowTableService.UpdateRainbowTableStatusAndFinalChainCount(
+	finalChainCount, err := service.rainbowChainService.CountChainsForRainbowTable(rainbowTable.ID)
+	if err != nil {
+		return fmt.Errorf(
+			"failed to retrieve final chain count for rainbow table %d: %s",
+			rainbowTable.ID,
+			err,
+		)
+	}
+
+	err = service.rainbowTableService.UpdateRainbowTableStatusAndFinalChainCount(
 		rainbowTable.ID,
 		model.StatusCompleted,
 		finalChainCount,
@@ -192,13 +201,15 @@ func (service *TableGeneratorJobService) updateFinalChainCountAndStatus(rainbowT
 }
 
 func (service *TableGeneratorJobService) RunGenerateJobForTable(rainbowTableId int16) error {
-	rainbowTable := service.rainbowTableService.FindRainbowTableById(rainbowTableId)
+	rainbowTable, err := service.rainbowTableService.FindRainbowTableById(rainbowTableId)
 
-	if rainbowTable.Name == "" {
+	if gorm.IsRecordNotFoundError(err) {
 		return fmt.Errorf("rainbow table with ID %d not found, cannot generate", rainbowTableId)
+	} else if err != nil {
+		return err
 	}
 
-	err := service.checkAndUpdateRainbowTableStatus(&rainbowTable)
+	err = service.checkAndUpdateRainbowTableStatus(&rainbowTable)
 	if err != nil {
 		return err
 	}

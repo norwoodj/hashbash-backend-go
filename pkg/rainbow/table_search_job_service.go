@@ -3,12 +3,14 @@ package rainbow
 import (
 	"encoding/hex"
 	"fmt"
+	"github.com/jinzhu/gorm"
 	"sync"
 	"sync/atomic"
 
 	"github.com/meirf/gopart"
 	"github.com/norwoodj/hashbash-backend-go/pkg/dao"
 	"github.com/norwoodj/hashbash-backend-go/pkg/model"
+	log "github.com/sirupsen/logrus"
 )
 
 type TableSearchJobConfig struct {
@@ -91,7 +93,12 @@ func (service *TableSearchJobService) runSearchThread(
 	foundChannel chan model.RainbowChain,
 ) {
 	defer close(foundChannel)
-	rainbowChains := service.rainbowChainService.FindChainByTableIdAndEndHashIn(rainbowTableId, searchBatch)
+	rainbowChains, err := service.rainbowChainService.FindChainByTableIdAndEndHashIn(rainbowTableId, searchBatch)
+
+	if err != nil {
+		log.Errorf("Error retrieving chains for rainbow table %d: %s", rainbowTableId, err)
+		return
+	}
 
 	for _, r := range rainbowChains {
 		if r.EndHash != "" {
@@ -164,14 +171,18 @@ func (service *TableSearchJobService) spawnChainGenerationThreads(
 }
 
 func (service *TableSearchJobService) RunSearchJob(searchId int64) error {
-	rainbowTableSearch := service.rainbowTableSearchService.FindRainbowTableSearchById(searchId)
-	if rainbowTableSearch.ID == 0 {
+	rainbowTableSearch, err := service.rainbowTableSearchService.FindRainbowTableSearchById(searchId)
+	if gorm.IsRecordNotFoundError(err) {
 		return fmt.Errorf("no rainbow table search object found for ID %d", searchId)
+	} else if err != nil {
+		return err
 	}
 
-	rainbowTable := service.rainbowTableService.FindRainbowTableById(rainbowTableSearch.RainbowTableId)
-	if rainbowTable.ID == 0 {
+	rainbowTable, err := service.rainbowTableService.FindRainbowTableById(rainbowTableSearch.RainbowTableId)
+	if gorm.IsRecordNotFoundError(err) {
 		return fmt.Errorf("no rainbow table object found for ID %d", rainbowTableSearch.RainbowTableId)
+	} else if err != nil {
+		return err
 	}
 
 	reductionFunctionFamily := getDefaultReductionFunctionFamily(int(rainbowTable.PasswordLength), rainbowTable.CharacterSet)

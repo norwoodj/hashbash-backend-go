@@ -7,13 +7,13 @@ import (
 )
 
 type RainbowTableService interface {
-	CountRainbowTables() int64
+	CountRainbowTables() (int64, error)
 	CreateRainbowTable(*model.RainbowTable) (*model.RainbowTable, error)
 	DeleteRainbowTableById(int16) error
-	FindRainbowTableById(int16) model.RainbowTable
-	FindRainbowTableByName(string) model.RainbowTable
+	FindRainbowTableById(int16) (model.RainbowTable, error)
+	FindRainbowTableByName(string) (model.RainbowTable, error)
 	IncrementRainbowTableChainsGenerated(int16, int64) error
-	ListRainbowTables(PageConfig) []model.RainbowTable
+	ListRainbowTables(PageConfig) ([]model.RainbowTable, error)
 	UpdateRainbowTableStatus(int16, string) error
 	UpdateRainbowTableStatusAndFinalChainCount(int16, string, int64) error
 	UpdateRainbowTableStatusAndGenerateStarted(int16, string) error
@@ -28,51 +28,58 @@ func NewRainbowTableService(db *gorm.DB) RainbowTableService {
 }
 
 func (service *DbRainbowTableService) CreateRainbowTable(rainbowTable *model.RainbowTable) (*model.RainbowTable, error) {
-	if service.FindRainbowTableByName(rainbowTable.Name).Name != "" {
+	_, err := service.FindRainbowTableByName(rainbowTable.Name)
+	if err == nil {
 		return nil, RainbowTableExistsError{Name: rainbowTable.Name}
+	} else if !gorm.IsRecordNotFoundError(err) {
+		return nil, err
 	}
 
-	err := service.databaseClient.
+	err = service.databaseClient.
 		Save(rainbowTable).
 		Error
 
 	return rainbowTable, err
 }
 
-func (service *DbRainbowTableService) CountRainbowTables() int64 {
+func (service *DbRainbowTableService) CountRainbowTables() (int64, error) {
 	var rainbowTableCount int64
-	service.databaseClient.
+	err := service.databaseClient.
 		Model(&model.RainbowTable{}).
-		Count(&rainbowTableCount)
+		Count(&rainbowTableCount).
+		Error
 
-	return rainbowTableCount
+	return rainbowTableCount, err
 }
 
-func (service *DbRainbowTableService) ListRainbowTables(pageConfig PageConfig) []model.RainbowTable {
+func (service *DbRainbowTableService) ListRainbowTables(pageConfig PageConfig) ([]model.RainbowTable, error) {
 	rainbowTables := make([]model.RainbowTable, 0)
 
-	applyPaging(service.databaseClient, pageConfig).
-		Find(&rainbowTables)
+	err := applyPaging(service.databaseClient, pageConfig).
+		Find(&rainbowTables).
+		Error
 
-	return rainbowTables
+	return rainbowTables, err
 }
 
-func (service *DbRainbowTableService) FindRainbowTableById(rainbowTableId int16) model.RainbowTable {
+func (service *DbRainbowTableService) FindRainbowTableById(rainbowTableId int16) (model.RainbowTable, error) {
 	var rainbowTable model.RainbowTable
-	service.databaseClient.
+	err := service.databaseClient.
 		Where("id = ?", rainbowTableId).
-		First(&rainbowTable)
+		First(&rainbowTable).
+		Error
 
-	return rainbowTable
+	return rainbowTable, err
 }
 
-func (service *DbRainbowTableService) FindRainbowTableByName(name string) model.RainbowTable {
+func (service *DbRainbowTableService) FindRainbowTableByName(name string) (model.RainbowTable, error) {
 	var rainbowTable model.RainbowTable
-	service.databaseClient.
+	err := service.databaseClient.
 		Where("name = ?", name).
-		First(&rainbowTable)
+		First(&rainbowTable).
+		Error
 
-	return rainbowTable
+	return rainbowTable, err
 }
 
 func (service *DbRainbowTableService) DeleteRainbowTableById(id int16) error {

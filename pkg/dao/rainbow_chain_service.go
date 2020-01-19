@@ -50,8 +50,8 @@ func getInsertIgnoreConflictClauseProviderForEngine(engine string) (insertIgnore
 
 type RainbowChainService interface {
 	CreateRainbowChains(int16, []model.RainbowChain) error
-	CountChainsForRainbowTable(int16) int64
-	FindChainByTableIdAndEndHashIn(int16, []string) []model.RainbowChain
+	CountChainsForRainbowTable(int16) (int64, error)
+	FindChainByTableIdAndEndHashIn(int16, []string) ([]model.RainbowChain, error)
 }
 
 type DbRainbowChainService struct {
@@ -93,22 +93,24 @@ func (service *DbRainbowChainService) CreateRainbowChains(rainbowTableId int16, 
 		Error
 }
 
-func (service *DbRainbowChainService) CountChainsForRainbowTable(rainbowTableId int16) int64 {
+func (service *DbRainbowChainService) CountChainsForRainbowTable(rainbowTableId int16) (int64, error) {
 	var finalChainCount int64
-	service.databaseClient.
+	err := service.databaseClient.
 		Model(&model.RainbowChain{}).
 		Where("rainbow_table_id = ?", rainbowTableId).
-		Count(&finalChainCount)
+		Count(&finalChainCount).
+		Error
 
-	return finalChainCount
+	return finalChainCount, err
 }
 
-func (service *DbRainbowChainService) FindChainByTableIdAndEndHashIn(rainbowTableId int16, endHashes []string) []model.RainbowChain {
+func (service *DbRainbowChainService) FindChainByTableIdAndEndHashIn(rainbowTableId int16, endHashes []string) ([]model.RainbowChain, error) {
 	var rainbowChains []model.RainbowChain
-	service.databaseClient.
+	err := service.databaseClient.
 		Model(&model.RainbowChain{}).
 		Where("rainbow_table_id = ? AND end_hash IN (?)", rainbowTableId, endHashes).
-		Scan(&rainbowChains)
+		Scan(&rainbowChains).
+		Error
 
-	return rainbowChains
+	return rainbowChains, err
 }

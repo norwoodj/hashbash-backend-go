@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"github.com/jinzhu/gorm"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -50,7 +51,12 @@ func getRainbowTableSearchesByIdHandler(rainbowTableSearchService dao.RainbowTab
 		}
 
 		includeNotFound := getIncludeNotFoundQueryParam(request.URL.Query())
-		rainbowTableSearches := rainbowTableSearchService.ListSearchesByRainbowTableId(convertRainbowTableId(rainbowTableId), includeNotFound, pageConfig)
+		rainbowTableSearches, err := rainbowTableSearchService.ListSearchesByRainbowTableId(convertRainbowTableId(rainbowTableId), includeNotFound, pageConfig)
+		if err != nil {
+			unexpectedError(err, writer)
+			return
+		}
+
 		writer.Header().Set("Content-Type", "application/json")
 		json.
 			NewEncoder(writer).
@@ -66,7 +72,12 @@ func getCountRainbowTableSearchesHandler(rainbowTableSearchService dao.RainbowTa
 		}
 
 		includeNotFound := getIncludeNotFoundQueryParam(request.URL.Query())
-		rainbowTableSearchCount := rainbowTableSearchService.CountRainbowTableSearches(convertRainbowTableId(rainbowTableId), includeNotFound)
+		rainbowTableSearchCount, err:= rainbowTableSearchService.CountRainbowTableSearches(convertRainbowTableId(rainbowTableId), includeNotFound)
+		if err != nil {
+			unexpectedError(err, writer)
+			return
+		}
+
 		writer.Header().Set("Content-Type", "application/json")
 		json.
 			NewEncoder(writer).
@@ -81,7 +92,12 @@ func getRainbowTableSearchResultsHandler(rainbowTableSearchService dao.RainbowTa
 			return
 		}
 
-		searchResultResponse := rainbowTableSearchService.GetRainbowTableSearchResults(convertRainbowTableId(rainbowTableId))
+		searchResultResponse, err := rainbowTableSearchService.GetRainbowTableSearchResults(convertRainbowTableId(rainbowTableId))
+		if err != nil {
+			unexpectedError(err, writer)
+			return
+		}
+
 		writer.Header().Set("Content-Type", "application/json")
 		json.
 			NewEncoder(writer).
@@ -96,7 +112,15 @@ func getRainbowTableSearchByIdHandler(rainbowTableSearchService dao.RainbowTable
 			return
 		}
 
-		rainbowTableSearch := rainbowTableSearchService.FindRainbowTableSearchById(rainbowTableSearchId)
+		rainbowTableSearch, err := rainbowTableSearchService.FindRainbowTableSearchById(rainbowTableSearchId)
+		if gorm.IsRecordNotFoundError(err) {
+			writer.WriteHeader(http.StatusNotFound)
+			return
+		} else if err != nil {
+			unexpectedError(err, writer)
+			return
+		}
+
 		writer.Header().Set("Content-Type", "application/json")
 		json.
 			NewEncoder(writer).
