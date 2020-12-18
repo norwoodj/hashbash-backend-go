@@ -7,9 +7,9 @@ Restart=always
 KillSignal=SIGQUIT
 Type=simple
 StandardError=syslog
+StandardOutput=/opt/hashbash/logs/webapp.log
 NotifyAccess=all
 EnvironmentFile=/opt/hashbash/hashbash.env
-Environment=HASHBASH_LOG_FILE=/opt/hashbash/logs/webapp.log
 Environment=HASHBASH_MANAGEMENT_PORT=8081
 
 [Install]

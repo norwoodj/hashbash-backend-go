@@ -52,14 +52,10 @@ func startConsumersAndHandleSignals(
 }
 
 func hashbashEngine(_ *cobra.Command, _ []string) {
-	logFile, doClose, err := util.SetupLogging()
+	err := util.SetupLogging()
 	if err != nil {
 		log.Error(err)
 		os.Exit(1)
-	}
-
-	if doClose {
-		defer logFile.Close()
 	}
 
 	util.DoInitialDelay()
