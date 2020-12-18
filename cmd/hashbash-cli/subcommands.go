@@ -97,14 +97,10 @@ func submitSearchRequests(
 }
 
 func searchCommandFn(_ *cobra.Command, args []string) {
-	logFile, doClose, err := util.SetupLogging()
+	err := util.SetupLogging()
 	if err != nil {
 		log.Error(err)
 		os.Exit(1)
-	}
-
-	if doClose {
-		defer logFile.Close()
 	}
 
 	hashbashHost := viper.GetString("hashbash-host")

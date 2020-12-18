@@ -84,7 +84,7 @@ func hashbashWebapp(_ *cobra.Command, _ []string) {
 	}
 
 	walkRoutes(router)
-	loggedRouter := handlers.LoggingHandler(logFile, router)
+	loggedRouter := handlers.LoggingHandler(os.Stdout, router)
 
 	waitGroup := sync.WaitGroup{}
 	waitGroup.Add(2)
