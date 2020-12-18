@@ -13,13 +13,13 @@ build: hashbash-cli hashbash-engine hashbash-webapp
 	:
 
 hashbash-cli: $(SRC_FILES) version.txt
-	/usr/local/bin/go build -ldflags "-X main.version=$(shell cat version.txt)" -o hashbash-cli github.com/norwoodj/hashbash-backend-go/cmd/hashbash-cli
+	go build -ldflags "-X main.version=$(shell cat version.txt)" -o hashbash-cli github.com/norwoodj/hashbash-backend-go/cmd/hashbash-cli
 
 hashbash-engine: $(SRC_FILES) version.txt
-	/usr/local/bin/go build -ldflags "-X main.version=$(shell cat version.txt)" -o hashbash-engine github.com/norwoodj/hashbash-backend-go/cmd/hashbash-engine
+	go build -ldflags "-X main.version=$(shell cat version.txt)" -o hashbash-engine github.com/norwoodj/hashbash-backend-go/cmd/hashbash-engine
 
 hashbash-webapp: $(SRC_FILES) version.txt
-	/usr/local/bin/go build -ldflags "-X main.version=$(shell cat version.txt)" -o hashbash-webapp github.com/norwoodj/hashbash-backend-go/cmd/hashbash-webapp
+	go build -ldflags "-X main.version=$(shell cat version.txt)" -o hashbash-webapp github.com/norwoodj/hashbash-backend-go/cmd/hashbash-webapp
 
 
 ##
