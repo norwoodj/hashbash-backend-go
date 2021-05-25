@@ -2,11 +2,10 @@ package util
 
 import (
 	"context"
-	"fmt"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
-	"sync"
 	"syscall"
 	"time"
 
@@ -53,56 +52,90 @@ func SetupLogging() error {
 	return nil
 }
 
-func startServerAndHandleSignals(server *http.Server, serverName string, port int, shutdownTimeout time.Duration) {
-	go func() {
-		log.Infof("Starting %s server on port %d...", serverName, port)
-		if err := server.ListenAndServe(); err != nil {
-			log.Errorf("Error running %s server: %s", serverName, err)
-			os.Exit(1)
-		}
-	}()
+func GetTcpListenerOrDie(tcpAddr string) net.Listener {
+	listener, err := net.Listen("tcp", tcpAddr)
+	if err != nil {
+		log.Fatalf("Failed to listen on tcp address %s: %s", tcpAddr, err)
+	}
 
+	return listener
+}
+
+func GetUnixSocketListenerOrDie(socketPath string) net.Listener {
+	listener, err := net.Listen("unix", socketPath)
+	if err != nil {
+		log.Fatalf("Failed to listen on unix socket %s: %s", socketPath, err)
+	}
+
+	return listener
+}
+
+func GetSystemdListenersOrDie(socketFdName string, listenersByName map[string][]net.Listener) []net.Listener {
+	listener, ok := listenersByName[socketFdName]
+	if !ok {
+		log.Fatalf("No systemd socket found with fd name %s", socketFdName)
+	}
+
+	return listener
+}
+
+func WaitForSignalGracefulShutdown(cancel context.CancelFunc) {
 	gracefulStop := make(chan os.Signal, 1)
-	signal.Notify(gracefulStop, syscall.SIGTERM)
-	signal.Notify(gracefulStop, syscall.SIGINT)
+    signal.Notify(gracefulStop, syscall.SIGTERM)
+    signal.Notify(gracefulStop, syscall.SIGINT)
 
 	shutdownSignal := <-gracefulStop
+	log.Infof("Received signal %s, stopping servers...", shutdownSignal)
+	cancel()
+}
 
-	log.Infof("Received Signal %s, shutting down %s server gracefully with %s timeout", shutdownSignal, serverName, shutdownTimeout)
-	ctx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
-	defer cancel()
+func GetServerForHandler(handler http.Handler) http.Server {
+	readTimeout := viper.GetDuration("read-timeout")
+	writeTimeout := viper.GetDuration("write-timeout")
+	idleTimeout := viper.GetDuration("idle-timeout")
 
+	return http.Server{
+		WriteTimeout: writeTimeout,
+		ReadTimeout:  readTimeout,
+		IdleTimeout:  idleTimeout,
+		Handler:      handler,
+	}
+}
+
+func StartServer(server http.Server, listener net.Listener) error {
+	log.Infof("Starting %s server...", listener.Addr().String())
+	if err := server.Serve(listener); err != nil {
+		log.Errorf("Error running %s server: %s", listener.Addr().String(), err)
+		return err
+	}
+
+	return nil
+}
+
+func HandleServerShutdown(done context.Context, server http.Server, listener net.Listener) error {
+	<-done.Done()
+
+	serverName := listener.Addr().String()
+	shutdownTimeout := viper.GetDuration("shutdown-timeout")
+	log.Infof("Shutting down %s server gracefully with %s timeout", serverName, shutdownTimeout)
+	ctx, _ := context.WithTimeout(context.Background(), shutdownTimeout)
 	err := server.Shutdown(ctx)
 
 	if err != nil {
 		log.Errorf("Error shutting down %s server gracefully: %s", serverName, err)
-		os.Exit(1)
+		return err
 	}
 
-	os.Exit(0)
+	log.Infof("Shut down %s server successfully", serverName)
+	return nil
 }
 
-func StartManagementServer(waitGroup *sync.WaitGroup) {
-	managementPort := viper.GetInt("management-port")
+func GetManagementHandler() http.Handler {
 	healthcheckHandler := healthcheck.NewHandler()
 	prometheusHandler := promhttp.Handler()
 
 	router := http.ServeMux{}
-	router.Handle("/prometheus", prometheusHandler)
+	router.Handle("/metrics", prometheusHandler)
 	router.Handle("/", healthcheckHandler)
-
-	StartHttpServer(managementPort, "management", &router, waitGroup)
-}
-
-func StartHttpServer(port int, serverName string, handler http.Handler, waitGroup *sync.WaitGroup) {
-	defer waitGroup.Done()
-	server := &http.Server{
-		Addr:         fmt.Sprintf("0.0.0.0:%d", port),
-		WriteTimeout: time.Second * 15,
-		ReadTimeout:  time.Second * 15,
-		IdleTimeout:  time.Second * 60,
-		Handler:      handler,
-	}
-
-	startServerAndHandleSignals(server, serverName, port, time.Second*5)
+	return &router
 }

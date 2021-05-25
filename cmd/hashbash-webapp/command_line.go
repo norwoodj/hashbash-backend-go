@@ -21,8 +21,13 @@ func newRootCommand(version string) *cobra.Command {
 	}
 
 	webappFlags := rootCmd.PersistentFlags()
-	webappFlags.DurationP("shutdown-timeout", "s", time.Second*15, "The duration for which the server waits for existing connections to finish, e.g. 15s or 1m")
-	webappFlags.IntP("web-port", "w", 8080, "Port on which to serve the hashbash webapp")
+	webappFlags.Duration("read-timeout", time.Second*5, "The duration for which the server waits for read operations to complete, e.g. 15s or 1m")
+	webappFlags.Duration("write-timeout", time.Second*5, "The duration for which the server waits for write operations to complete, e.g. 15s or 1m")
+	webappFlags.Duration("idle-timeout", 0, "The duration for which the server waits for idle connections to write/read data")
+	webappFlags.Duration("shutdown-timeout", time.Second*10, "The duration for which the server waits for existing connections to complete at shutdown time")
+	webappFlags.StringSlice("http-addr", []string{}, "host:port interfaces on which to serve http traffic, may be repeated")
+	webappFlags.StringSlice("http-name", []string{}, "systemd socket name on which to serve http traffic, may be repeated")
+	webappFlags.StringSlice("http-sock", []string{}, "File paths of sockets on which to serve http traffic, may be repeated")
 
 	util.AddDefaultFlags(webappFlags)
 	dao.AddDatabaseFlags(webappFlags)
@@ -32,6 +37,7 @@ func newRootCommand(version string) *cobra.Command {
 	viper.AutomaticEnv()
 	viper.SetEnvPrefix("HASHBASH")
 	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
-	viper.BindPFlags(rootCmd.PersistentFlags())
+	_ = viper.BindPFlags(rootCmd.PersistentFlags())
+
 	return rootCmd
 }

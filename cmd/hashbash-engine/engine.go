@@ -114,7 +114,6 @@ func hashbashEngine(_ *cobra.Command, _ []string) {
 	waitGroup := sync.WaitGroup{}
 	waitGroup.Add(2)
 
-	go util.StartManagementServer(&waitGroup)
 	go startConsumersAndHandleSignals(hashbashConsumers, viper.GetDuration("shutdown-timeout"), &waitGroup)
 	waitGroup.Wait()
 }

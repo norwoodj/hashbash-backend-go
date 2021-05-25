@@ -1,9 +1,12 @@
 package main
 
 import (
+	"context"
+	"github.com/coreos/go-systemd/activation"
+	"net"
+	"net/http"
 	"os"
 	"strings"
-	"sync"
 
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
@@ -15,6 +18,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"golang.org/x/sync/errgroup"
 )
 
 func walkRoutes(router *mux.Router) {
@@ -50,6 +54,12 @@ func walkRoutes(router *mux.Router) {
 	})
 }
 
+func startHttpHandler(startErrGroup *errgroup.Group, shutdownErrGroup *errgroup.Group, done context.Context, listener net.Listener, handler http.Handler) {
+	server := util.GetServerForHandler(handler)
+	startErrGroup.Go(func() error { return util.StartServer(server, listener) })
+	shutdownErrGroup.Go(func() error { return util.HandleServerShutdown(done, server, listener) })
+}
+
 func hashbashWebapp(_ *cobra.Command, _ []string) {
 	err := util.SetupLogging()
 	if err != nil {
@@ -68,8 +78,7 @@ func hashbashWebapp(_ *cobra.Command, _ []string) {
 
 	hashbashProducers, err := rabbitmq.CreateProducers(connection)
 	if err != nil {
-		log.Errorf("Failed to instantiate rabbitmq producers: %s", err)
-		os.Exit(1)
+		log.Fatalf("Failed to instantiate rabbitmq producers: %s", err)
 	}
 
 	router := mux.NewRouter()
@@ -79,18 +88,69 @@ func hashbashWebapp(_ *cobra.Command, _ []string) {
 	frontendTemplatesDir := viper.GetString("frontend-template-path")
 	err = frontend.RegisterTemplateHandler(router, frontendTemplatesDir)
 	if err != nil {
-		log.Errorf("Failed to read frontend directory %s: %s", frontendTemplatesDir, err)
-		os.Exit(1)
+		log.Fatalf("Failed to read frontend directory %s: %s", frontendTemplatesDir, err)
 	}
 
 	walkRoutes(router)
 	loggedRouter := handlers.LoggingHandler(os.Stdout, router)
+	systemdListenersByName, err := activation.ListenersWithNames()
 
-	waitGroup := sync.WaitGroup{}
-	waitGroup.Add(2)
-	webPort := viper.GetInt("web-port")
+	if err != nil {
+		log.Fatalf("Failed to retrieve systemd sockets by name: %s", err)
+	}
 
-	go util.StartManagementServer(&waitGroup)
-	go util.StartHttpServer(webPort, "hashbash webapp", loggedRouter, &waitGroup)
-	waitGroup.Wait()
+	done, cancel := context.WithCancel(context.Background())
+	startErrGroup, _ := errgroup.WithContext(done)
+	shutdownErrGroup, _ := errgroup.WithContext(done)
+
+	for _, addr := range viper.GetStringSlice("http-addr") {
+		listener := util.GetTcpListenerOrDie(addr)
+		startHttpHandler(startErrGroup, shutdownErrGroup, done, listener, loggedRouter)
+	}
+
+	for _, socketPath := range viper.GetStringSlice("http-sock") {
+		listener := util.GetUnixSocketListenerOrDie(socketPath)
+		startHttpHandler(startErrGroup, shutdownErrGroup, done, listener, loggedRouter)
+	}
+
+	for _, socketFdName := range viper.GetStringSlice("http-name") {
+		listeners := util.GetSystemdListenersOrDie(socketFdName, systemdListenersByName)
+
+		for _, l := range listeners {
+			startHttpHandler(startErrGroup, shutdownErrGroup, done, l, loggedRouter)
+		}
+	}
+
+	managementHandler := handlers.LoggingHandler(os.Stdout, util.GetManagementHandler())
+	for _, addr := range viper.GetStringSlice("management-addr") {
+		listener := util.GetTcpListenerOrDie(addr)
+		startHttpHandler(startErrGroup, shutdownErrGroup, done, listener, managementHandler)
+	}
+
+	for _, socketPath := range viper.GetStringSlice("management-sock") {
+		listener := util.GetUnixSocketListenerOrDie(socketPath)
+		startHttpHandler(startErrGroup, shutdownErrGroup, done, listener, managementHandler)
+	}
+
+	for _, socketFdName := range viper.GetStringSlice("management-name") {
+		listeners := util.GetSystemdListenersOrDie(socketFdName, systemdListenersByName)
+
+		for _, l := range listeners {
+			startHttpHandler(startErrGroup, shutdownErrGroup, done, l, managementHandler)
+		}
+	}
+
+	go util.WaitForSignalGracefulShutdown(cancel)
+
+	go func() {
+		if err := startErrGroup.Wait(); err != nil {
+			log.Fatalf("Failed to start servers: %s", err)
+		}
+	}()
+
+	if err := shutdownErrGroup.Wait(); err != nil {
+		log.Fatalf("Error shutting down servers: %s", err)
+	}
+
+	log.Info("Shutdown successful")
 }

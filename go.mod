@@ -3,6 +3,7 @@ module github.com/norwoodj/hashbash-backend-go
 go 1.12
 
 require (
+	github.com/coreos/go-systemd v0.0.0-20181012123002-c6f51f82210d
 	github.com/erikstmartin/go-testdb v0.0.0-20160219214506-8d10e4a1bae5 // indirect
 	github.com/go-sql-driver/mysql v1.4.1
 	github.com/gorilla/handlers v1.4.2
@@ -21,6 +22,7 @@ require (
 	github.com/spf13/pflag v1.0.3
 	github.com/spf13/viper v1.3.2
 	github.com/streadway/amqp v0.0.0-20190404075320-75d898a42a94
+	golang.org/x/sync v0.0.0-20190227155943-e225da77a7e6
 	golang.org/x/sys v0.0.0-20190312061237-fead79001313 // indirect
 	golang.org/x/text v0.3.1-0.20181227161524-e6919f6577db // indirect
 )
