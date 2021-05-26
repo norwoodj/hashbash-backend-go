@@ -11,7 +11,8 @@ import (
 
 	"github.com/heptiolabs/healthcheck"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	log "github.com/sirupsen/logrus"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
 )
 
@@ -35,27 +36,27 @@ func DoInitialDelay() {
 	initialDelay := viper.GetDuration("initial-delay")
 
 	if initialDelay != 0 {
-		log.Infof("Delaying startup by %s, to allow for mysql/rabbitmq to start up...", initialDelay)
+		log.Info().Msgf("Delaying startup by %s, to allow for mysql/rabbitmq to start up...", initialDelay)
 		time.Sleep(initialDelay)
 	}
 }
 
 func SetupLogging() error {
-	logLevel, err := log.ParseLevel(viper.GetString("log-level"))
+	logLevel, err := zerolog.ParseLevel(viper.GetString("log-level"))
 	if err != nil {
 		return err
 	}
 
-	log.SetLevel(logLevel)
-	log.SetFormatter(&log.TextFormatter{FullTimestamp: true})
-
+	zerolog.SetGlobalLevel(logLevel)
 	return nil
 }
 
 func GetTcpListenerOrDie(tcpAddr string) net.Listener {
 	listener, err := net.Listen("tcp", tcpAddr)
 	if err != nil {
-		log.Fatalf("Failed to listen on tcp address %s: %s", tcpAddr, err)
+		log.Fatal().
+			Err(err).
+			Msgf("Failed to listen on tcp address %s", tcpAddr)
 	}
 
 	return listener
@@ -64,7 +65,9 @@ func GetTcpListenerOrDie(tcpAddr string) net.Listener {
 func GetUnixSocketListenerOrDie(socketPath string) net.Listener {
 	listener, err := net.Listen("unix", socketPath)
 	if err != nil {
-		log.Fatalf("Failed to listen on unix socket %s: %s", socketPath, err)
+		log.Fatal().
+			Err(err).
+			Msgf("Failed to listen on unix socket %s", socketPath)
 	}
 
 	return listener
@@ -73,7 +76,7 @@ func GetUnixSocketListenerOrDie(socketPath string) net.Listener {
 func GetSystemdListenersOrDie(socketFdName string, listenersByName map[string][]net.Listener) []net.Listener {
 	listener, ok := listenersByName[socketFdName]
 	if !ok {
-		log.Fatalf("No systemd socket found with fd name %s", socketFdName)
+		log.Fatal().Msgf("No systemd socket found with fd name %s", socketFdName)
 	}
 
 	return listener
@@ -81,11 +84,11 @@ func GetSystemdListenersOrDie(socketFdName string, listenersByName map[string][]
 
 func WaitForSignalGracefulShutdown(cancel context.CancelFunc) {
 	gracefulStop := make(chan os.Signal, 1)
-    signal.Notify(gracefulStop, syscall.SIGTERM)
-    signal.Notify(gracefulStop, syscall.SIGINT)
+	signal.Notify(gracefulStop, syscall.SIGTERM)
+	signal.Notify(gracefulStop, syscall.SIGINT)
 
 	shutdownSignal := <-gracefulStop
-	log.Infof("Received signal %s, stopping servers...", shutdownSignal)
+	log.Info().Msgf("Received signal %s, stopping servers...", shutdownSignal)
 	cancel()
 }
 
@@ -103,9 +106,9 @@ func GetServerForHandler(handler http.Handler) http.Server {
 }
 
 func StartServer(server http.Server, listener net.Listener) error {
-	log.Infof("Starting %s server...", listener.Addr().String())
+	log.Info().Msgf("Starting %s server...", listener.Addr().String())
 	if err := server.Serve(listener); err != nil {
-		log.Errorf("Error running %s server: %s", listener.Addr().String(), err)
+		log.Error().Err(err).Msgf("Error running %s server", listener.Addr().String())
 		return err
 	}
 
@@ -117,16 +120,16 @@ func HandleServerShutdown(done context.Context, server http.Server, listener net
 
 	serverName := listener.Addr().String()
 	shutdownTimeout := viper.GetDuration("shutdown-timeout")
-	log.Infof("Shutting down %s server gracefully with %s timeout", serverName, shutdownTimeout)
+	log.Info().Msgf("Shutting down %s server with %s timeout", serverName, shutdownTimeout)
 	ctx, _ := context.WithTimeout(context.Background(), shutdownTimeout)
 	err := server.Shutdown(ctx)
 
 	if err != nil {
-		log.Errorf("Error shutting down %s server gracefully: %s", serverName, err)
+		log.Error().Err(err).Msgf("Error shutting down %s server", serverName)
 		return err
 	}
 
-	log.Infof("Shut down %s server successfully", serverName)
+	log.Info().Msgf("Shut down %s server successfully", serverName)
 	return nil
 }
 

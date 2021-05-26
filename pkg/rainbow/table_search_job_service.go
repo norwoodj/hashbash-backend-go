@@ -10,7 +10,7 @@ import (
 	"github.com/meirf/gopart"
 	"github.com/norwoodj/hashbash-backend-go/pkg/dao"
 	"github.com/norwoodj/hashbash-backend-go/pkg/model"
-	log "github.com/sirupsen/logrus"
+	"github.com/rs/zerolog/log"
 )
 
 type TableSearchJobConfig struct {
@@ -96,7 +96,7 @@ func (service *TableSearchJobService) runSearchThread(
 	rainbowChains, err := service.rainbowChainService.FindChainByTableIdAndEndHashIn(rainbowTableId, searchBatch)
 
 	if err != nil {
-		log.Errorf("Error retrieving chains for rainbow table %d: %s", rainbowTableId, err)
+		log.Error().Err(err).Msgf("Error retrieving chains for rainbow table %d", rainbowTableId)
 		return
 	}
 

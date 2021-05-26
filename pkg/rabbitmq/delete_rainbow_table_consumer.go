@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"github.com/norwoodj/hashbash-backend-go/pkg/dao"
 	"github.com/norwoodj/rabbitmq-client-go/rabbitmq"
-	log "github.com/sirupsen/logrus"
+	"github.com/rs/zerolog/log"
 	"github.com/streadway/amqp"
 )
 
@@ -16,16 +16,16 @@ func (worker *DeleteRainbowTableWorker) HandleMessage(message *amqp.Delivery) er
 	var messageContent RainbowTableIdMessage
 	err := json.Unmarshal(message.Body, &messageContent)
 	if err != nil {
-		log.Errorf("Failed to deserialize rainbow table ID message for deletion: %s", err)
+		log.Error().Err(err).Msg("Failed to deserialize rainbow table ID message for deletion")
 		return err
 	}
 
-	log.Infof("DeleteRainbowTable consumer got request for deletion of rainbow table %d", messageContent.RainbowTableId)
+	log.Info().Msgf("DeleteRainbowTable consumer got request for deletion of rainbow table %d", messageContent.RainbowTableId)
 	err = worker.rainbowTableService.DeleteRainbowTableById(messageContent.RainbowTableId)
 
 	if err != nil {
 		if !dao.IsRainbowTableNotExistsError(err) {
-			log.Errorf("Unknown error occurred deleting rainbow table with id %d: %s", messageContent.RainbowTableId, err)
+			log.Error().Err(err).Msgf("Unknown error occurred deleting rainbow table with id %d", messageContent.RainbowTableId)
 		}
 
 		return err

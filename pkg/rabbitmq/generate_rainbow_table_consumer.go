@@ -6,7 +6,7 @@ import (
 	"github.com/norwoodj/hashbash-backend-go/pkg/dao"
 	"github.com/norwoodj/hashbash-backend-go/pkg/rainbow"
 	"github.com/norwoodj/rabbitmq-client-go/rabbitmq"
-	log "github.com/sirupsen/logrus"
+	"github.com/rs/zerolog/log"
 	"github.com/streadway/amqp"
 )
 
@@ -22,7 +22,7 @@ func (worker *GenerateRainbowTableWorker) HandleMessage(message *amqp.Delivery) 
 		return fmt.Errorf("failed to unmarshal rainbow table generate message")
 	}
 
-	log.Infof("GenerateRainbowTable consumer got generate request for rainbow table %d", rainbowTableGenerateMessage.RainbowTableId)
+	log.Info().Msgf("GenerateRainbowTable consumer got generate request for rainbow table %d", rainbowTableGenerateMessage.RainbowTableId)
 	return worker.rainbowTableGenerateJobService.RunGenerateJobForTable(rainbowTableGenerateMessage.RainbowTableId)
 }
 

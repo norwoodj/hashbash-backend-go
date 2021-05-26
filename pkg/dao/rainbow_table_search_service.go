@@ -89,7 +89,7 @@ func (service *DbRainbowTableSearchService) ListSearchesByRainbowTableId(
 		query = query.Where("status != ?", model.SearchNotFound)
 	}
 
-	err := query.Find(&rainbowTableSearches). Error
+	err := query.Find(&rainbowTableSearches).Error
 	return rainbowTableSearches, err
 }
 

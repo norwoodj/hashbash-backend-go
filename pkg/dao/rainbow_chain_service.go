@@ -8,7 +8,7 @@ import (
 
 	"github.com/jinzhu/gorm"
 	"github.com/norwoodj/hashbash-backend-go/pkg/model"
-	log "github.com/sirupsen/logrus"
+	"github.com/rs/zerolog/log"
 )
 
 type insertIgnoreConflictClauseProvider interface {
@@ -62,7 +62,7 @@ type DbRainbowChainService struct {
 func NewRainbowChainService(db *gorm.DB, databaseEngine string) RainbowChainService {
 	insertIgnoreConflictClauseProvider, err := getInsertIgnoreConflictClauseProviderForEngine(databaseEngine)
 	if err != nil {
-		log.Error(err)
+		log.Error().Err(err).Msg("Failed to start rainbow chain service")
 		os.Exit(1)
 	}
 

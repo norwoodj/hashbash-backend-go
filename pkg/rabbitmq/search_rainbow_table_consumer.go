@@ -5,7 +5,7 @@ import (
 
 	"github.com/norwoodj/hashbash-backend-go/pkg/rainbow"
 	"github.com/norwoodj/rabbitmq-client-go/rabbitmq"
-	log "github.com/sirupsen/logrus"
+	"github.com/rs/zerolog/log"
 	"github.com/streadway/amqp"
 )
 
@@ -18,11 +18,11 @@ func (worker *SearchRainbowTableWorker) HandleMessage(message *amqp.Delivery) er
 	err := json.Unmarshal(message.Body, &messageContent)
 
 	if err != nil {
-		log.Errorf("Failed to deserialize rainbow table search request message: %s", err)
+		log.Error().Err(err).Msg("Failed to deserialize rainbow table search request message")
 		return err
 	}
 
-	log.Infof(
+	log.Info().Msgf(
 		"SearchRainbowTable consumer got request to search rainbow table %d for hash %s",
 		messageContent.RainbowTableId,
 		messageContent.Hash,

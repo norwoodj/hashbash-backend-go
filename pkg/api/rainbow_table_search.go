@@ -9,7 +9,7 @@ import (
 	"github.com/norwoodj/hashbash-backend-go/pkg/api_model"
 	"github.com/norwoodj/hashbash-backend-go/pkg/dao"
 	"github.com/norwoodj/hashbash-backend-go/pkg/rabbitmq"
-	log "github.com/sirupsen/logrus"
+	"github.com/rs/zerolog/log"
 )
 
 func AddRainbowTableSearchRoutes(
@@ -72,7 +72,7 @@ func getCountRainbowTableSearchesHandler(rainbowTableSearchService dao.RainbowTa
 		}
 
 		includeNotFound := getIncludeNotFoundQueryParam(request.URL.Query())
-		rainbowTableSearchCount, err:= rainbowTableSearchService.CountRainbowTableSearches(convertRainbowTableId(rainbowTableId), includeNotFound)
+		rainbowTableSearchCount, err := rainbowTableSearchService.CountRainbowTableSearches(convertRainbowTableId(rainbowTableId), includeNotFound)
 		if err != nil {
 			unexpectedError(err, writer)
 			return
@@ -174,7 +174,7 @@ func createRainbowTableSearchByIdHandler(
 			PublishMessage(searchRequestMessage)
 
 		if err != nil {
-			log.Errorf("Unknown error occurred publishing search request for rainbow table %d: %s", rainbowTableId, err)
+			log.Error().Err(err).Msgf("Unknown error occurred publishing search request for rainbow table %d", rainbowTableId)
 			writer.WriteHeader(http.StatusInternalServerError)
 			return
 		}

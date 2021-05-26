@@ -2,9 +2,8 @@ package rabbitmq
 
 import (
 	"github.com/norwoodj/rabbitmq-client-go/rabbitmq"
-	"os"
 
-	log "github.com/sirupsen/logrus"
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 )
@@ -34,8 +33,7 @@ func AcquireMqConnectionOrDie() *rabbitmq.ServerConnection {
 	connection, err := rabbitmq.NewServerConnection(rabbitConfig)
 
 	if err != nil {
-		log.Errorf("Failed to create rabbitmq connection: %s", err)
-		os.Exit(1)
+		log.Fatal().Err(err).Msg("Failed to create rabbitmq connection")
 	}
 
 	return connection

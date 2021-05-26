@@ -15,7 +15,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/gorilla/schema"
 	"github.com/norwoodj/hashbash-backend-go/pkg/dao"
-	log "github.com/sirupsen/logrus"
+	"github.com/rs/zerolog/log"
 )
 
 const rainbowTableDefaultChainLength = 10000
@@ -145,7 +145,7 @@ func handleGenerateRainbowTable(
 		return rainbowTable, err
 	}
 
-	log.Infof("Created rainbow table %s with id %d. Publishing request for generation...", rainbowTable.Name, rainbowTable.ID)
+	log.Info().Msgf("Created rainbow table %s with id %d. Publishing request for generation...", rainbowTable.Name, rainbowTable.ID)
 	err = hashbashMqProducers.GenerateRainbowTableProducer.
 		PublishMessage(rabbitmq.RainbowTableIdMessage{RainbowTableId: rainbowTable.ID})
 
@@ -159,7 +159,7 @@ func getGenerateRainbowTableFormHandler(
 	return func(writer http.ResponseWriter, request *http.Request) {
 		err := request.ParseForm()
 		if err != nil {
-			log.Warnf("Failed to parse generateRainbowTable form request: %s", err)
+			log.Warn().Err(err).Msg("Failed to parse generateRainbowTable form request")
 			http.Redirect(
 				writer,
 				request,
@@ -175,7 +175,7 @@ func getGenerateRainbowTableFormHandler(
 		err = decoder.Decode(&generateRequest, request.PostForm)
 
 		if err != nil {
-			log.Warnf("Failed to unmarshal generateRainbowTable request: %s", err)
+			log.Warn().Err(err).Msg("Failed to unmarshal generateRainbowTable request")
 			http.Redirect(
 				writer,
 				request,
@@ -193,7 +193,7 @@ func getGenerateRainbowTableFormHandler(
 		)
 
 		if err != nil {
-			log.Errorf("Failed to publish generateRainbowTable request: %s", err)
+			log.Error().Err(err).Msg("Failed to publish generateRainbowTable request")
 			http.Redirect(
 				writer,
 				request,
@@ -221,7 +221,7 @@ func getGenerateRainbowTableJsonHandler(
 		requestBody, err := ioutil.ReadAll(request.Body)
 
 		if err != nil {
-			log.Warnf("Failed to read request body: %s", err)
+			log.Warn().Err(err).Msg("Failed to read request body: %s")
 			unexpectedError(err, writer)
 			return
 		}
@@ -230,7 +230,7 @@ func getGenerateRainbowTableJsonHandler(
 		err = json.Unmarshal(requestBody, &generateRequest)
 
 		if err != nil {
-			log.Warnf("Failed to unmarshal generateRainbowTable request: %s", err)
+			log.Warn().Err(err).Msg("Failed to unmarshal generateRainbowTable request")
 			unexpectedError(err, writer)
 			return
 		}
@@ -256,7 +256,7 @@ func getGenerateRainbowTableJsonHandler(
 				return
 			}
 
-			log.Errorf("Failed to publish generateRainbowTable request: %s", err)
+			log.Error().Err(err).Msg("Failed to publish generateRainbowTable request")
 			unexpectedError(err, writer)
 			return
 		}
@@ -289,7 +289,7 @@ func deleteRainbowTableByIdHandler(
 			PublishMessage(rabbitmq.RainbowTableIdMessage{RainbowTableId: rainbowTable.ID})
 
 		if err != nil {
-			log.Errorf("Failed to publish deleteRainbowTable request: %s", err)
+			log.Error().Err(err).Msg("Failed to publish deleteRainbowTable request")
 			unexpectedError(err, writer)
 			return
 		}

@@ -4,18 +4,30 @@ import (
 	"fmt"
 	"strings"
 
-	log "github.com/sirupsen/logrus"
+	"github.com/rs/zerolog"
 	"github.com/spf13/pflag"
 )
 
 func possibleLogLevels() []string {
-	levels := make([]string, 0)
-
-	for _, l := range log.AllLevels {
-		levels = append(levels, l.String())
+	levels := []zerolog.Level{
+		zerolog.DebugLevel,
+		zerolog.InfoLevel,
+		zerolog.WarnLevel,
+		zerolog.ErrorLevel,
+		zerolog.FatalLevel,
+		zerolog.PanicLevel,
+		zerolog.NoLevel,
+		zerolog.Disabled,
+		zerolog.TraceLevel,
 	}
 
-	return levels
+	possibleCliValues := make([]string, 0)
+
+	for _, l := range levels {
+		possibleCliValues = append(possibleCliValues, l.String())
+	}
+
+	return possibleCliValues
 }
 
 func AddDefaultFlags(flags *pflag.FlagSet) {

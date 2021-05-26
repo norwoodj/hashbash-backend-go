@@ -15,39 +15,39 @@ import (
 	"github.com/norwoodj/hashbash-backend-go/pkg/frontend"
 	"github.com/norwoodj/hashbash-backend-go/pkg/rabbitmq"
 	"github.com/norwoodj/hashbash-backend-go/pkg/util"
-	log "github.com/sirupsen/logrus"
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"golang.org/x/sync/errgroup"
 )
 
 func walkRoutes(router *mux.Router) {
-	log.Debugf("Walking registered routes...")
+	log.Debug().Msgf("Walking registered routes...")
 
 	_ = router.Walk(func(route *mux.Route, router *mux.Router, ancestors []*mux.Route) error {
 		pathTemplate, err := route.GetPathTemplate()
 		if err == nil {
-			log.Debugf("Route: %s", pathTemplate)
+			log.Debug().Msgf("Route: %s", pathTemplate)
 		}
 
 		pathRegexp, err := route.GetPathRegexp()
 		if err == nil {
-			log.Debugf("Path regexp: %s", pathRegexp)
+			log.Debug().Msgf("Path regexp: %s", pathRegexp)
 		}
 
 		queriesTemplates, err := route.GetQueriesTemplates()
 		if err == nil {
-			log.Debugf("Queries templates: [%s]", strings.Join(queriesTemplates, ","))
+			log.Debug().Msgf("Queries templates: [%s]", strings.Join(queriesTemplates, ","))
 		}
 
 		queriesRegexps, err := route.GetQueriesRegexp()
 		if err == nil {
-			log.Debugf("Queries regexps: [%s]", strings.Join(queriesRegexps, ","))
+			log.Debug().Msgf("Queries regexps: [%s]", strings.Join(queriesRegexps, ","))
 		}
 
 		methods, err := route.GetMethods()
 		if err == nil {
-			log.Debugf("Methods: [%s]", strings.Join(methods, ","))
+			log.Debug().Msgf("Methods: [%s]", strings.Join(methods, ","))
 		}
 
 		return nil
@@ -63,8 +63,9 @@ func startHttpHandler(startErrGroup *errgroup.Group, shutdownErrGroup *errgroup.
 func hashbashWebapp(_ *cobra.Command, _ []string) {
 	err := util.SetupLogging()
 	if err != nil {
-		log.Error(err)
-		os.Exit(1)
+		log.Fatal().
+			Err(err).
+			Msg("Failed to setup logging")
 	}
 
 	util.DoInitialDelay()
@@ -78,7 +79,9 @@ func hashbashWebapp(_ *cobra.Command, _ []string) {
 
 	hashbashProducers, err := rabbitmq.CreateProducers(connection)
 	if err != nil {
-		log.Fatalf("Failed to instantiate rabbitmq producers: %s", err)
+		log.Fatal().
+			Err(err).
+			Msg("Failed to instantiate rabbitmq producers")
 	}
 
 	router := mux.NewRouter()
@@ -88,7 +91,9 @@ func hashbashWebapp(_ *cobra.Command, _ []string) {
 	frontendTemplatesDir := viper.GetString("frontend-template-path")
 	err = frontend.RegisterTemplateHandler(router, frontendTemplatesDir)
 	if err != nil {
-		log.Fatalf("Failed to read frontend directory %s: %s", frontendTemplatesDir, err)
+		log.Fatal().
+			Err(err).
+			Msgf("Failed to read frontend directory %s", frontendTemplatesDir)
 	}
 
 	walkRoutes(router)
@@ -96,7 +101,9 @@ func hashbashWebapp(_ *cobra.Command, _ []string) {
 	systemdListenersByName, err := activation.ListenersWithNames()
 
 	if err != nil {
-		log.Fatalf("Failed to retrieve systemd sockets by name: %s", err)
+		log.Fatal().
+			Err(err).
+			Msg("Failed to retrieve systemd sockets by name")
 	}
 
 	done, cancel := context.WithCancel(context.Background())
@@ -144,13 +151,17 @@ func hashbashWebapp(_ *cobra.Command, _ []string) {
 
 	go func() {
 		if err := startErrGroup.Wait(); err != nil {
-			log.Fatalf("Failed to start servers: %s", err)
+			log.Fatal().
+				Err(err).
+				Msg("Failed to start servers")
 		}
 	}()
 
 	if err := shutdownErrGroup.Wait(); err != nil {
-		log.Fatalf("Error shutting down servers: %s", err)
+		log.Fatal().
+			Err(err).
+			Msg("Error shutting down servers")
 	}
 
-	log.Info("Shutdown successful")
+	log.Info().Msg("Shutdown successful")
 }

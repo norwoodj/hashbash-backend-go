@@ -9,7 +9,7 @@ import (
 	"github.com/norwoodj/hashbash-backend-go/pkg/metrics"
 	"github.com/norwoodj/hashbash-backend-go/pkg/model"
 	"github.com/prometheus/client_golang/prometheus"
-	log "github.com/sirupsen/logrus"
+	"github.com/rs/zerolog/log"
 )
 
 type TableGenerateJobConfig struct {
@@ -64,7 +64,7 @@ func (service *TableGeneratorJobService) runChainGeneratorThread(
 	errorChannel chan error,
 ) {
 	defer close(errorChannel)
-	log.Debugf("Spawned thread to generate chains for rainbow table %d, in batches of %d", rainbowTable.ID, service.jobConfig.ChainBatchSize)
+	log.Debug().Msgf("Spawned thread to generate chains for rainbow table %d, in batches of %d", rainbowTable.ID, service.jobConfig.ChainBatchSize)
 	chainList := make([]model.RainbowChain, service.jobConfig.ChainBatchSize)
 	chainLength := int(rainbowTable.ChainLength)
 
@@ -94,7 +94,7 @@ func (service *TableGeneratorJobService) runChainGeneratorThread(
 			Add(float64(service.jobConfig.ChainBatchSize))
 	}
 
-	log.Debugf("No batches remaining to be generated for rainbow table %d, exiting", rainbowTable.ID)
+	log.Debug().Msgf("No batches remaining to be generated for rainbow table %d, exiting", rainbowTable.ID)
 }
 
 func (service *TableGeneratorJobService) checkAndUpdateRainbowTableStatus(rainbowTable *model.RainbowTable) error {

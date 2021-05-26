@@ -7,7 +7,7 @@ import (
 	"github.com/go-sql-driver/mysql"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
-	log "github.com/sirupsen/logrus"
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 )
@@ -37,7 +37,7 @@ func getMysqlConnection() (*gorm.DB, error) {
 	cfg.ParseTime = true
 
 	databaseDsn := cfg.FormatDSN()
-	log.Debug(databaseDsn)
+	log.Debug().Msg(databaseDsn)
 	db, err := gorm.Open("mysql", databaseDsn)
 
 	if err != nil {
@@ -76,7 +76,7 @@ func GetConnection(engine string) (*gorm.DB, error) {
 func GetConnectionOrDie(engine string) *gorm.DB {
 	db, err := GetConnection(engine)
 	if err != nil {
-		log.Errorf("Error creating database connection: %s", err)
+		log.Error().Err(err).Msg("Error creating database connection")
 		os.Exit(1)
 	}
 
