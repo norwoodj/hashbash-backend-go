@@ -10,7 +10,6 @@ StandardError=syslog
 StandardOutput=/opt/hashbash/logs/webapp.log
 NotifyAccess=all
 EnvironmentFile=/opt/hashbash/hashbash.env
-Environment=HASHBASH_MANAGEMENT_PORT=8081
 
 [Install]
 WantedBy=multi-user.target

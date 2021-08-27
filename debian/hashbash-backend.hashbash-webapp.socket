@@ -1,0 +1,9 @@
+[Unit]
+Description=hashbash webapp listen socket
+PartOf=hashbash-webapp.service
+
+[Socket]
+ListenStream=/opt/hashbash/sockets/hashbash-webapp.sock
+
+[Install]
+WantedBy=sockets.target
