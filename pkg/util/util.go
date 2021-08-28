@@ -2,6 +2,7 @@ package util
 
 import (
 	"context"
+	"golang.org/x/sync/errgroup"
 	"net"
 	"net/http"
 	"os"
@@ -82,14 +83,38 @@ func GetSystemdListenersOrDie(socketFdName string, listenersByName map[string][]
 	return listener
 }
 
-func WaitForSignalGracefulShutdown(cancel context.CancelFunc) {
-	gracefulStop := make(chan os.Signal, 1)
-	signal.Notify(gracefulStop, syscall.SIGTERM)
-	signal.Notify(gracefulStop, syscall.SIGINT)
+func WaitForSignalGracefulShutdown(cancel context.CancelFunc, startErrGroup *errgroup.Group, shutdownErrGroup *errgroup.Group) {
+	go func() {
+		gracefulStop := make(chan os.Signal, 1)
+		signal.Notify(gracefulStop, syscall.SIGTERM)
+		signal.Notify(gracefulStop, syscall.SIGINT)
 
-	shutdownSignal := <-gracefulStop
-	log.Info().Msgf("Received signal %s, stopping servers...", shutdownSignal)
-	cancel()
+		shutdownSignal := <-gracefulStop
+		log.Info().Msgf("Received signal %s, stopping servers...", shutdownSignal)
+		cancel()
+	}()
+
+	go func() {
+		if err := startErrGroup.Wait(); err != nil {
+			log.Fatal().
+				Err(err).
+				Msg("Failed to start servers")
+		}
+	}()
+
+	if err := shutdownErrGroup.Wait(); err != nil {
+		log.Fatal().
+		Err(err).
+		Msg("Error shutting down servers")
+	}
+
+	log.Info().Msg("Shutdown successful")
+}
+
+func StartHttpHandler(startErrGroup *errgroup.Group, shutdownErrGroup *errgroup.Group, done context.Context, listener net.Listener, handler http.Handler) {
+	server := GetServerForHandler(handler)
+	startErrGroup.Go(func() error { return StartServer(server, listener) })
+	shutdownErrGroup.Go(func() error { return HandleServerShutdown(done, server, listener) })
 }
 
 func GetServerForHandler(handler http.Handler) http.Server {
@@ -132,6 +157,7 @@ func HandleServerShutdown(done context.Context, server http.Server, listener net
 	log.Info().Msgf("Shut down %s server successfully", serverName)
 	return nil
 }
+
 
 func GetManagementHandler() http.Handler {
 	healthcheckHandler := healthcheck.NewHandler()

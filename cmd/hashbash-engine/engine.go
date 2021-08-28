@@ -1,60 +1,74 @@
 package main
 
 import (
+	"context"
+	"github.com/coreos/go-systemd/activation"
+	"github.com/gorilla/handlers"
+	"golang.org/x/sync/errgroup"
 	"os"
-	"os/signal"
-	"sync"
-	"syscall"
-	"time"
 
 	"github.com/norwoodj/hashbash-backend-go/pkg/dao"
 	"github.com/norwoodj/hashbash-backend-go/pkg/metrics"
 	"github.com/norwoodj/hashbash-backend-go/pkg/rabbitmq"
 	"github.com/norwoodj/hashbash-backend-go/pkg/rainbow"
 	"github.com/norwoodj/hashbash-backend-go/pkg/util"
-	log "github.com/sirupsen/logrus"
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
-func startConsumersAndHandleSignals(
+func toErrFunc(f func(chan error)) func() error {
+	startErrors := make(chan error)
+
+	return func() error {
+		f(startErrors)
+
+		for e := range startErrors {
+			return e
+		}
+
+		return nil
+	}
+}
+
+func startConsumers(
 	consumers rabbitmq.HashbashMqConsumerWorkers,
-	shutdownGraceDuration time.Duration,
-	waitGroup *sync.WaitGroup,
-) {
-	defer waitGroup.Done()
-	consumerStartErrorChannels := []chan error{make(chan error), make(chan error), make(chan error)}
+	startErrGroup *errgroup.Group,
+	shutdownErrGroup *errgroup.Group,
+) chan bool {
 	quit := make(chan bool)
 
-	log.Infof("Starting hashbash consumers...")
-	go consumers.HashbashDeleteRainbowTableConsumer.ConsumeMessages(quit, consumerStartErrorChannels[0])
-	go consumers.HashbashGenerateRainbowTableConsumer.ConsumeMessages(quit, consumerStartErrorChannels[1])
-	go consumers.HashbashSearchRainbowTableConsumer.ConsumeMessages(quit, consumerStartErrorChannels[2])
+	log.Info().Msg("Starting hashbash consumers...")
+	startErrGroup.Go(toErrFunc(
+		func(startErrors chan error) {
+			consumers.HashbashDeleteRainbowTableConsumer.ConsumeMessages(quit, startErrors)
+		},
+	))
 
-	for _, errorChannel := range consumerStartErrorChannels {
-		consumerStartError := <-errorChannel
+	startErrGroup.Go(toErrFunc(
+		func(startErrors chan error) {
+			consumers.HashbashGenerateRainbowTableConsumer.ConsumeMessages(quit, startErrors)
+		},
+	))
 
-		if consumerStartError != nil {
-			log.Error(consumerStartError)
-			os.Exit(1)
-		}
-	}
+	startErrGroup.Go(toErrFunc(
+		func(startErrors chan error) {
+			consumers.HashbashSearchRainbowTableConsumer.ConsumeMessages(quit, startErrors)
+		},
+	))
 
-	gracefulStop := make(chan os.Signal, 1)
-	signal.Notify(gracefulStop, syscall.SIGTERM)
-	signal.Notify(gracefulStop, syscall.SIGINT)
+	return quit
+}
 
-	shutdownSignal := <-gracefulStop
-
-	log.Infof("Received Signal %s, shutting down gracefully, waiting %s for channels to close...", shutdownSignal, shutdownGraceDuration)
+func registerShutdownConsumers(quit chan bool, ctx context.Context) {
+	<-ctx.Done()
 	close(quit)
-	time.Sleep(shutdownGraceDuration)
 }
 
 func hashbashEngine(_ *cobra.Command, _ []string) {
 	err := util.SetupLogging()
 	if err != nil {
-		log.Error(err)
+		log.Error().Err(err).Msg("Failed to setup logging")
 		os.Exit(1)
 	}
 
@@ -107,13 +121,43 @@ func hashbashEngine(_ *cobra.Command, _ []string) {
 	)
 
 	if err != nil {
-		log.Errorf("Failed to instantiate rabbitmq consumers: %s", err)
+		log.Error().Err(err).Msg("Failed to instantiate rabbitmq consumers")
 		os.Exit(1)
 	}
 
-	waitGroup := sync.WaitGroup{}
-	waitGroup.Add(2)
+	done, cancel := context.WithCancel(context.Background())
+	startErrGroup, _ := errgroup.WithContext(done)
+	shutdownErrGroup, _ := errgroup.WithContext(done)
 
-	go startConsumersAndHandleSignals(hashbashConsumers, viper.GetDuration("shutdown-timeout"), &waitGroup)
-	waitGroup.Wait()
+	quit := startConsumers(hashbashConsumers, startErrGroup, shutdownErrGroup)
+	go registerShutdownConsumers(quit, done)
+
+	systemdListenersByName, err := activation.ListenersWithNames()
+
+	if err != nil {
+		log.Fatal().
+			Err(err).
+			Msg("Failed to retrieve systemd sockets by name")
+	}
+
+	managementHandler := handlers.LoggingHandler(os.Stdout, util.GetManagementHandler())
+	for _, addr := range viper.GetStringSlice("management-addr") {
+		listener := util.GetTcpListenerOrDie(addr)
+		util.StartHttpHandler(startErrGroup, shutdownErrGroup, done, listener, managementHandler)
+	}
+
+	for _, socketPath := range viper.GetStringSlice("management-sock") {
+		listener := util.GetUnixSocketListenerOrDie(socketPath)
+		util.StartHttpHandler(startErrGroup, shutdownErrGroup, done, listener, managementHandler)
+	}
+
+	for _, socketFdName := range viper.GetStringSlice("management-name") {
+		listeners := util.GetSystemdListenersOrDie(socketFdName, systemdListenersByName)
+
+		for _, l := range listeners {
+			util.StartHttpHandler(startErrGroup, shutdownErrGroup, done, l, managementHandler)
+		}
+	}
+
+	util.WaitForSignalGracefulShutdown(cancel, startErrGroup, shutdownErrGroup)
 }

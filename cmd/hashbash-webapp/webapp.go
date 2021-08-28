@@ -3,8 +3,6 @@ package main
 import (
 	"context"
 	"github.com/coreos/go-systemd/activation"
-	"net"
-	"net/http"
 	"os"
 	"strings"
 
@@ -52,12 +50,6 @@ func walkRoutes(router *mux.Router) {
 
 		return nil
 	})
-}
-
-func startHttpHandler(startErrGroup *errgroup.Group, shutdownErrGroup *errgroup.Group, done context.Context, listener net.Listener, handler http.Handler) {
-	server := util.GetServerForHandler(handler)
-	startErrGroup.Go(func() error { return util.StartServer(server, listener) })
-	shutdownErrGroup.Go(func() error { return util.HandleServerShutdown(done, server, listener) })
 }
 
 func hashbashWebapp(_ *cobra.Command, _ []string) {
@@ -112,56 +104,40 @@ func hashbashWebapp(_ *cobra.Command, _ []string) {
 
 	for _, addr := range viper.GetStringSlice("http-addr") {
 		listener := util.GetTcpListenerOrDie(addr)
-		startHttpHandler(startErrGroup, shutdownErrGroup, done, listener, loggedRouter)
+		util.StartHttpHandler(startErrGroup, shutdownErrGroup, done, listener, loggedRouter)
 	}
 
 	for _, socketPath := range viper.GetStringSlice("http-sock") {
 		listener := util.GetUnixSocketListenerOrDie(socketPath)
-		startHttpHandler(startErrGroup, shutdownErrGroup, done, listener, loggedRouter)
+		util.StartHttpHandler(startErrGroup, shutdownErrGroup, done, listener, loggedRouter)
 	}
 
 	for _, socketFdName := range viper.GetStringSlice("http-name") {
 		listeners := util.GetSystemdListenersOrDie(socketFdName, systemdListenersByName)
 
 		for _, l := range listeners {
-			startHttpHandler(startErrGroup, shutdownErrGroup, done, l, loggedRouter)
+			util.StartHttpHandler(startErrGroup, shutdownErrGroup, done, l, loggedRouter)
 		}
 	}
 
 	managementHandler := handlers.LoggingHandler(os.Stdout, util.GetManagementHandler())
 	for _, addr := range viper.GetStringSlice("management-addr") {
 		listener := util.GetTcpListenerOrDie(addr)
-		startHttpHandler(startErrGroup, shutdownErrGroup, done, listener, managementHandler)
+		util.StartHttpHandler(startErrGroup, shutdownErrGroup, done, listener, managementHandler)
 	}
 
 	for _, socketPath := range viper.GetStringSlice("management-sock") {
 		listener := util.GetUnixSocketListenerOrDie(socketPath)
-		startHttpHandler(startErrGroup, shutdownErrGroup, done, listener, managementHandler)
+		util.StartHttpHandler(startErrGroup, shutdownErrGroup, done, listener, managementHandler)
 	}
 
 	for _, socketFdName := range viper.GetStringSlice("management-name") {
 		listeners := util.GetSystemdListenersOrDie(socketFdName, systemdListenersByName)
 
 		for _, l := range listeners {
-			startHttpHandler(startErrGroup, shutdownErrGroup, done, l, managementHandler)
+			util.StartHttpHandler(startErrGroup, shutdownErrGroup, done, l, managementHandler)
 		}
 	}
 
-	go util.WaitForSignalGracefulShutdown(cancel)
-
-	go func() {
-		if err := startErrGroup.Wait(); err != nil {
-			log.Fatal().
-				Err(err).
-				Msg("Failed to start servers")
-		}
-	}()
-
-	if err := shutdownErrGroup.Wait(); err != nil {
-		log.Fatal().
-			Err(err).
-			Msg("Error shutting down servers")
-	}
-
-	log.Info().Msg("Shutdown successful")
+	util.WaitForSignalGracefulShutdown(cancel, startErrGroup, shutdownErrGroup)
 }
