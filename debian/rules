@@ -6,3 +6,5 @@
 override_dh_installsystemd:
 	dh_installsystemd --name=hashbash-engine
 	dh_installsystemd --name=hashbash-webapp
+	dh_installsystemd --name=hashbash-engine-management
+	dh_installsystemd --name=hashbash-webapp-management
