@@ -1,0 +1,10 @@
+[Unit]
+Description=hashbash engine management listener
+PartOf=hashbash-webapp.service
+
+[Socket]
+ListenStream=8082
+FileDescriptorName=hashbash-engine-management
+
+[Install]
+WantedBy=sockets.target

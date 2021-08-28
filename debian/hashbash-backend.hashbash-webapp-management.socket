@@ -1,0 +1,10 @@
+[Unit]
+Description=hashbash webapp management listener
+PartOf=hashbash-webapp.service
+
+[Socket]
+ListenStream=8081
+FileDescriptorName=hashbash-webpp-management
+
+[Install]
+WantedBy=sockets.target

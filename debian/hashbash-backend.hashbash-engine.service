@@ -10,7 +10,7 @@ StandardError=syslog
 StandardOutput=/opt/hashbash/logs/engine.log
 NotifyAccess=all
 EnvironmentFile=/opt/hashbash/hashbash.env
-Environment=HASHBASH_MANAGEMENT_PORT=8082
+Environment=HASHBASH_MANAGEMENT_NAME=hashbash-engine-management
 
 [Install]
 WantedBy=multi-user.target
