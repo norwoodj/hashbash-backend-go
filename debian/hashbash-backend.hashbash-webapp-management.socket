@@ -5,7 +5,7 @@ PartOf=hashbash-webapp.service
 [Socket]
 ListenStream=8081
 BindIPv6Only=both
-FileDescriptorName=hashbash-webpp-management
+FileDescriptorName=hashbash-webapp-management
 Service=hashbash-webapp.service
 
 [Install]

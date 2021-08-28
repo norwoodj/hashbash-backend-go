@@ -4,7 +4,7 @@ PartOf=hashbash-webapp.service
 
 [Socket]
 ListenStream=/opt/hashbash/sockets/hashbash-webapp.sock
-FileDescriptorName=hashbash-webpp
+FileDescriptorName=hashbash-webapp
 
 [Install]
 WantedBy=sockets.target
