@@ -1,5 +1,7 @@
 [Unit]
 Description=hashbash webapp service
+Requires=hashbash-webapp.socket
+Requires=hashbash-webapp-management.socket
 
 [Service]
 ExecStart=/opt/hashbash/bin/hashbash-webapp
@@ -7,11 +9,12 @@ Restart=always
 KillSignal=SIGQUIT
 Type=simple
 StandardError=syslog
-StandardOutput=/opt/hashbash/logs/webapp.log
 NotifyAccess=all
 EnvironmentFile=/opt/hashbash/hashbash.env
 Environment=HASHBASH_HTTP_NAME=hashbash-webapp
 Environment=HASHBASH_MANAGEMENT_NAME=hashbash-webapp-management
+Sockets=hashbash-webapp.socket
+Sockets=hashbash-webapp-management.socket
 
 [Install]
 WantedBy=multi-user.target

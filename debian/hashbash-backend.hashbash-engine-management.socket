@@ -4,7 +4,9 @@ PartOf=hashbash-webapp.service
 
 [Socket]
 ListenStream=8082
+BindIPv6Only=both
 FileDescriptorName=hashbash-engine-management
+Service=hashbash-engine.service
 
 [Install]
 WantedBy=sockets.target

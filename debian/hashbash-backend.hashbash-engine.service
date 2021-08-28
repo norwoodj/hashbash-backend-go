@@ -1,5 +1,6 @@
 [Unit]
 Description=hashbash engine service
+Requires=hashbash-engine-management.socket
 
 [Service]
 ExecStart=/opt/hashbash/bin/hashbash-engine
@@ -11,6 +12,7 @@ StandardOutput=/opt/hashbash/logs/engine.log
 NotifyAccess=all
 EnvironmentFile=/opt/hashbash/hashbash.env
 Environment=HASHBASH_MANAGEMENT_NAME=hashbash-engine-management
+Sockets=hashbash-engine-management.socket
 
 [Install]
 WantedBy=multi-user.target

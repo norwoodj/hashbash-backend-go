@@ -1,10 +1,12 @@
 [Unit]
-Description=hashbash webapp management listener
+Description=hashbash webapp management listen socket
 PartOf=hashbash-webapp.service
 
 [Socket]
 ListenStream=8081
+BindIPv6Only=both
 FileDescriptorName=hashbash-webpp-management
+Service=hashbash-webapp.service
 
 [Install]
 WantedBy=sockets.target
