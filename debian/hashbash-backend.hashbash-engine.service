@@ -13,6 +13,7 @@ NotifyAccess=all
 EnvironmentFile=/opt/hashbash/hashbash.env
 Environment=HASHBASH_MANAGEMENT_NAME=hashbash-engine-management
 Sockets=hashbash-engine-management.socket
+User=hashbash
 
 [Install]
 WantedBy=multi-user.target

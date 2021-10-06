@@ -5,6 +5,8 @@ PartOf=hashbash-webapp.service
 [Socket]
 ListenStream=/opt/hashbash/sockets/hashbash-webapp.sock
 FileDescriptorName=hashbash-webapp
+SocketUser=hashbash
+SocketGroup=hashbash
 
 [Install]
 WantedBy=sockets.target

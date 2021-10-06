@@ -7,6 +7,8 @@ ListenStream=8082
 BindIPv6Only=both
 FileDescriptorName=hashbash-engine-management
 Service=hashbash-engine.service
+SocketUser=hashbash
+SocketGroup=hashbash
 
 [Install]
 WantedBy=sockets.target
