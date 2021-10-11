@@ -1,5 +1,4 @@
-frontend /opt/hashbash
-hashbash.env /opt/hashbash
-hashbash-cli /opt/hashbash/bin
-hashbash-engine /opt/hashbash/bin
-hashbash-webapp /opt/hashbash/bin
+frontend /etc/hashbash
+hashbash-cli /usr/bin
+hashbash-engine /usr/bin
+hashbash-webapp /usr/bin

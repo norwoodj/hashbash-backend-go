@@ -3,8 +3,9 @@ Description=hashbash webapp listen socket
 PartOf=hashbash-webapp.service
 
 [Socket]
-ListenStream=/opt/hashbash/sockets/hashbash-webapp.sock
+ListenStream=/run/hashbash/webapp.sock
 FileDescriptorName=hashbash-webapp
+Service=hashbash-webapp.service
 SocketUser=hashbash
 SocketGroup=hashbash
 

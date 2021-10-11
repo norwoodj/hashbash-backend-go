@@ -3,14 +3,12 @@ Description=hashbash engine service
 Requires=hashbash-engine-management.socket
 
 [Service]
-ExecStart=/opt/hashbash/bin/hashbash-engine
+ExecStart=/usr/bin/hashbash-engine
 Restart=always
 KillSignal=SIGQUIT
 Type=simple
-StandardError=syslog
-StandardOutput=/opt/hashbash/logs/engine.log
 NotifyAccess=all
-EnvironmentFile=/opt/hashbash/hashbash.env
+EnvironmentFile=/opt/secrets/hashbash/hashbash.env
 Environment=HASHBASH_MANAGEMENT_NAME=hashbash-engine-management
 Sockets=hashbash-engine-management.socket
 User=hashbash

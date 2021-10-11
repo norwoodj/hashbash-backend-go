@@ -4,13 +4,12 @@ Requires=hashbash-webapp.socket
 Requires=hashbash-webapp-management.socket
 
 [Service]
-ExecStart=/opt/hashbash/bin/hashbash-webapp
+ExecStart=/usr/bin/hashbash-webapp
 Restart=always
 KillSignal=SIGQUIT
 Type=simple
-StandardError=syslog
 NotifyAccess=all
-EnvironmentFile=/opt/hashbash/hashbash.env
+EnvironmentFile=/opt/secrets/hashbash/hashbash.env
 Environment=HASHBASH_HTTP_NAME=hashbash-webapp
 Environment=HASHBASH_MANAGEMENT_NAME=hashbash-webapp-management
 Sockets=hashbash-webapp.socket
