@@ -14,6 +14,7 @@ Environment=HASHBASH_HTTP_NAME=hashbash-webapp
 Environment=HASHBASH_MANAGEMENT_NAME=hashbash-webapp-management
 Sockets=hashbash-webapp.socket
 Sockets=hashbash-webapp-management.socket
+RuntimeDirectory=hashbash
 User=hashbash
 
 [Install]
