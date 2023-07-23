@@ -1,53 +1,6 @@
 version: "3.7"
 
 services:
-  postgresql:
-    image: postgres:11.5
-    environment:
-      POSTGRES_DB: hashbash
-      POSTGRES_PASSWORD: postgres
-    ports:
-      - published: 5432
-        target: 5432
-
-  migrate:
-    image: migrate/migrate
-    depends_on:
-      - postgresql
-    entrypoint:
-      - sh
-      - -c
-      - >
-          echo "sleeping 3 seconds to allow database to start" &&
-          sleep 3 &&
-          /migrate \
-            -database postgresql://postgres:postgres@postgresql/hashbash?sslmode=disable \
-            -source file://versions \
-            up
-    volumes:
-      - type: bind
-        source: ../migrate-versions
-        target: /opt/migrate/versions
-    working_dir: /opt/migrate
-
-  rabbitmq:
-    image: rabbitmq:3.7-management-alpine
-    ports:
-      - published: 5672
-        target: 5672
-      - published: 15672
-        target: 15672
-      - published: 55672
-        target: 55672
-
-  nginx:
-    image: jnorwood/hashbash-nginx:20.0104.0
-    extra_hosts:
-      - localhost:${HASHBASH_HOST_IP_ADDRESS}
-    ports:
-      - published: 80
-        target: 23081
-
   hashbash-engine:
     image: jnorwood/hashbash-consumers-go:current
     build:
@@ -56,6 +9,13 @@ services:
     depends_on:
       - postgresql
       - rabbitmq
+    entrypoint:
+      - bash
+      - -c
+      - >
+          /opt/scripts/wait-for-it rabbitmq:5672 -t 300
+          && /opt/scripts/wait-for-it postgresql:5432 -t 300
+          && /hashbash-engine
     environment:
       HASHBASH_DATABASE_ENGINE: postgresql
       HASHBASH_DATABASE_HOST: postgresql
@@ -63,11 +23,15 @@ services:
       HASHBASH_DATABASE_USERNAME: postgres
       HASHBASH_DATABASE_PASSWORD: postgres
       HASHBASH_RABBITMQ_HOST: rabbitmq
-      HASHBASH_INITIAL_DELAY: 15s
-      HASHBASH_MANAGEMENT_PORT: 8082
+      HASHBASH_MANAGEMENT_ADDR: 0.0.0.0:8082
     ports:
       - published: 8082
         target: 8082
+    volumes:
+      - type: bind
+        source: ../scripts
+        target: /opt/scripts
+        read_only: true
 
   hashbash-webapp:
     image: jnorwood/hashbash-webapp-go:current
@@ -77,6 +41,14 @@ services:
     depends_on:
       - postgresql
       - rabbitmq
+    entrypoint:
+      - bash
+      - -c
+      - >
+          /opt/scripts/wait-for-it rabbitmq:5672 -t 300
+          && /opt/scripts/wait-for-it postgresql:5432 -t 300
+          && rm -f /run/hashbash/webapp.sock
+          && /hashbash-webapp
     environment:
       HASHBASH_DATABASE_ENGINE: postgresql
       HASHBASH_DATABASE_HOST: postgresql
@@ -84,9 +56,16 @@ services:
       HASHBASH_DATABASE_USERNAME: postgres
       HASHBASH_DATABASE_PASSWORD: postgres
       HASHBASH_RABBITMQ_HOST: rabbitmq
-      HASHBASH_INITIAL_DELAY: 15s
+      HASHBASH_HTTP_SOCK: /run/hashbash/webapp.sock
+      HASHBASH_MANAGEMENT_ADDR: 0.0.0.0:8081
     ports:
-      - published: 8080
-        target: 8080
       - published: 8081
         target: 8081
+    volumes:
+      - type: bind
+        source: ../scripts
+        target: /opt/scripts
+        read_only: true
+      - type: volume
+        source: hashbash-sockets
+        target: /run/hashbash

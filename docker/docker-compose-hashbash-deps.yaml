@@ -11,24 +11,29 @@ services:
         target: 5432
 
   migrate:
-    image: migrate/migrate
+    image: jnorwood/hashbash-migrate:current
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile-migrate
     depends_on:
       - postgresql
     entrypoint:
-      - sh
+      - bash
       - -c
       - >
-          echo "sleeping 3 seconds to allow database to start" &&
-          sleep 3 &&
-          /migrate \
-            -database postgresql://postgres:postgres@postgresql/hashbash?sslmode=disable \
-            -source file://versions \
-            up
+        /opt/scripts/wait-for-it postgresql:5432 -t 300
+        && /migrate \
+          -database postgresql://postgres:postgres@postgresql/hashbash?sslmode=disable \
+          -path . \
+          up
     volumes:
       - type: bind
         source: ../migrate-versions
-        target: /opt/migrate/versions
-    working_dir: /opt/migrate
+        target: /opt/migrate
+      - type: bind
+        source: ../scripts
+        target: /opt/scripts
+        read_only: true
 
   rabbitmq:
     image: rabbitmq:3.7-management-alpine
@@ -41,9 +46,28 @@ services:
         target: 55672
 
   nginx:
-    image: jnorwood/hashbash-nginx:20.0104.0
-    extra_hosts:
-      - localhost:${HASHBASH_HOST_IP_ADDRESS}
+    image: jnorwood/hashbash-nginx:23.0724.0
+    volumes:
+      - type: volume
+        source: hashbash-sockets
+        target: /run/hashbash
+      - type: volume
+        source: hashbash-nginx-runtime
+        target: /run/hashbash-nginx
+
+  socat:
+    image: jnorwood/hashbash-socat:current
+    build:
+      context: docker
+      dockerfile: Dockerfile-socat
     ports:
       - published: 80
-        target: 23081
+        target: 23080
+    volumes:
+      - type: volume
+        source: hashbash-nginx-runtime
+        target: /run/hashbash-nginx
+
+volumes:
+  hashbash-sockets:
+  hashbash-nginx-runtime:

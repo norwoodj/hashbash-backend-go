@@ -10,6 +10,7 @@ hashbash-cli
 hashbash-engine
 hashbash-webapp
 engine
+migrate
 webapp
 debian/.debhelper/
 debian/debhelper-build-stamp

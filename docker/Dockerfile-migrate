@@ -1,0 +1,5 @@
+FROM migrate/migrate:v4.16.2@sha256:d2bc77621bc2f2b63c83fa2e2c2ba5d5c38752e841092a2159350476e5e9fc2a
+
+RUN apk add --no-cache bash
+WORKDIR /opt/migrate
+COPY migrate-versions/* ./

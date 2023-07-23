@@ -26,33 +26,19 @@ complicated applications in go, as well as gaining experience using the followin
 
 
 ### Building and Developing Locally
-In order to build, run and develop this project locally you'll need a number of things installed:
-
-* docker
-* docker-compose
-* make
-* go >= 1.12 (although you can run the docker version without this)
+There is a docker-compose setup for running locally. To start run:
+```
+make run
+```
 
 To build the go binaries:
-```
-cd cmd/hashbash-cli
-go build
-
-cd cmd/hashbash-engine
-go build
-
-cd cmd/hashbash-webapp
-go build
-```
-
-To build the docker images
 ```
 make
 ```
 
-To run the application locally in docker:
+To build the docker images
 ```
-make run
+make images
 ```
 
 To run the application on your host machine, with rabbitmq and mysql in docker:

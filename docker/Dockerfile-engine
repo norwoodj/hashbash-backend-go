@@ -1,11 +1,10 @@
 # Download dependencies and build the binary
-FROM golang:1.13-alpine AS build
+FROM golang:1.20-bookworm@sha256:832f2f74baa3e2b00ace688cb2fa934dffeade39f5b4c0cc8b1cff8d3fb084a0 AS build
 LABEL maintainer=norwood.john.m@gmail.com
 
-COPY go.mod go.sum /opt/hashbash/
 WORKDIR /opt/hashbash
-RUN apk add --no-cache git \
-    && go mod download
+COPY go.mod go.sum ./
+RUN go mod download
 
 COPY . /opt/hashbash/
 WORKDIR /opt/hashbash/cmd/hashbash-engine
@@ -13,7 +12,7 @@ RUN go build -ldflags "-X main.version=$(cat /opt/hashbash/version.txt)"
 
 
 # Copy built binary into the final image
-FROM alpine:3.9
+FROM debian:bookworm-20230703@sha256:60774985572749dc3c39147d43089d53e7ce17b844eebcf619d84467160217ab
 COPY --from=build /opt/hashbash/cmd/hashbash-engine/hashbash-engine /
 EXPOSE 8081
 ENTRYPOINT ["/hashbash-engine"]

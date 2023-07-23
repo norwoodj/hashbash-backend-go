@@ -104,8 +104,8 @@ func WaitForSignalGracefulShutdown(cancel context.CancelFunc, startErrGroup *err
 
 	if err := shutdownErrGroup.Wait(); err != nil {
 		log.Fatal().
-		Err(err).
-		Msg("Error shutting down servers")
+			Err(err).
+			Msg("Error shutting down servers")
 	}
 
 	log.Info().Msg("Shutdown successful")
@@ -157,7 +157,6 @@ func HandleServerShutdown(done context.Context, server http.Server, listener net
 	log.Info().Msgf("Shut down %s server successfully", serverName)
 	return nil
 }
-
 
 func GetManagementHandler() http.Handler {
 	healthcheckHandler := healthcheck.NewHandler()

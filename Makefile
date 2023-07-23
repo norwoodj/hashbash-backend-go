@@ -2,6 +2,7 @@ SRC_FILES := $(shell find . -name "*.go")
 
 DOCKER_REPOSITORY := jnorwood
 CONSUMERS_IMAGE := hashbash-consumers-go
+MIGRATE_IMAGE := hashbash-migrate
 WEBAPP_IMAGE := hashbash-webapp-go
 VERSION_PLACEHOLDER := _VERSION
 
@@ -45,22 +46,28 @@ deb: update-deb-version
 # Docker images
 ##
 .PHONY: images
-images: engine webapp
+images: engine webapp migrate
 
 engine: version.txt
-	docker-compose -f docker/docker-compose-hashbash.yaml build hashbash-engine
+	docker-compose -f docker/docker-compose-hashbash-deps.yaml -f docker/docker-compose-hashbash.yaml build hashbash-engine
 	touch engine
 
 webapp: version.txt
-	docker-compose -f docker/docker-compose-hashbash.yaml build hashbash-webapp
+	docker-compose -f docker/docker-compose-hashbash-deps.yaml -f docker/docker-compose-hashbash.yaml build hashbash-webapp
 	touch webapp
+
+migrate: version.txt
+	docker-compose -f docker/docker-compose-hashbash-deps.yaml build migrate
+	touch migrate
 
 .PHONY: push
 push: images
 	docker tag $(DOCKER_REPOSITORY)/$(CONSUMERS_IMAGE):current $(DOCKER_REPOSITORY)/$(CONSUMERS_IMAGE):$(shell cat version.txt)
 	docker tag $(DOCKER_REPOSITORY)/$(WEBAPP_IMAGE):current $(DOCKER_REPOSITORY)/$(WEBAPP_IMAGE):$(shell cat version.txt)
+	docker tag $(DOCKER_REPOSITORY)/$(MIGRATE_IMAGE):current $(DOCKER_REPOSITORY)/$(MIGRATE_IMAGE):$(shell cat version.txt)
 	docker push $(DOCKER_REPOSITORY)/$(CONSUMERS_IMAGE):$(shell cat version.txt)
 	docker push $(DOCKER_REPOSITORY)/$(WEBAPP_IMAGE):$(shell cat version.txt)
+	docker push $(DOCKER_REPOSITORY)/$(MIGRATE_IMAGE):$(shell cat version.txt)
 
 
 ##
@@ -68,19 +75,23 @@ push: images
 ##
 .PHONY: down
 down:
-	docker-compose -f docker/docker-compose-hashbash.yaml down
+	docker-compose -f docker/docker-compose-hashbash-deps.yaml -f docker/docker-compose-hashbash.yaml down --volumes
 
 .PHONY: schema
 schema:
-	docker-compose -f docker/docker-compose-hashbash-deps.yaml run migrate
+	docker-compose -f docker/docker-compose-hashbash-deps.yaml run --rm migrate
+
+.PHONY: schema
+new-schema:
+	docker-compose -f docker/docker-compose-hashbash-deps.yaml run --entrypoint /migrate --rm migrate create -dir versions -ext sql $(SCHEMA_NAME)
 
 .PHONY: run-deps
 run-deps:
-	HASHBASH_HOST_IP_ADDRESS=$(shell ./get-wan-ip) docker-compose -f docker/docker-compose-hashbash-deps.yaml up
+	docker-compose -f docker/docker-compose-hashbash-deps.yaml up
 
 .PHONY: run
 run:
-	HASHBASH_HOST_IP_ADDRESS=$(shell ./get-wan-ip) docker-compose -f docker/docker-compose-hashbash.yaml up
+	docker-compose -f docker/docker-compose-hashbash-deps.yaml -f docker/docker-compose-hashbash.yaml up
 
 
 ##
@@ -88,7 +99,7 @@ run:
 ##
 .PHONY: clean
 clean:
-	rm -vf version.txt hashbash-cli hashbash-engine hashbash-webapp engine webapp
+	rm -vf version.txt hashbash-cli hashbash-engine hashbash-webapp engine webapp migrate
 
 .PHONY: debclean
 debclean: version.txt
