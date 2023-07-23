@@ -1,6 +1,7 @@
 package dao
 
 import (
+	"encoding/hex"
 	"fmt"
 	"os"
 	"sort"
@@ -9,6 +10,7 @@ import (
 	"github.com/jinzhu/gorm"
 	"github.com/norwoodj/hashbash-backend-go/pkg/model"
 	"github.com/rs/zerolog/log"
+	"golang.org/x/exp/slices"
 )
 
 type insertIgnoreConflictClauseProvider interface {
@@ -51,7 +53,7 @@ func getInsertIgnoreConflictClauseProviderForEngine(engine string) (insertIgnore
 type RainbowChainService interface {
 	CreateRainbowChains(int16, []model.RainbowChain) error
 	CountChainsForRainbowTable(int16) (int64, error)
-	FindChainByTableIdAndEndHashIn(int16, []string) ([]model.RainbowChain, error)
+	FindChainByTableIdAndEndHashIn(int16, [][]byte) ([]model.RainbowChain, error)
 }
 
 type DbRainbowChainService struct {
@@ -71,7 +73,7 @@ func NewRainbowChainService(db *gorm.DB, databaseEngine string) RainbowChainServ
 
 func (service *DbRainbowChainService) CreateRainbowChains(rainbowTableId int16, rainbowChains []model.RainbowChain) error {
 	sort.Slice(rainbowChains, func(i, j int) bool {
-		return rainbowChains[i].EndHash < rainbowChains[j].EndHash
+		return slices.Compare(rainbowChains[i].EndHash, rainbowChains[j].EndHash) < 0
 	})
 
 	queryBuilder := strings.Builder{}
@@ -81,10 +83,10 @@ func (service *DbRainbowChainService) CreateRainbowChains(rainbowTableId int16, 
 		model.RainbowChain{}.TableName(),
 	))
 
-	queryBuilder.WriteString(fmt.Sprintf("(%d, '%s', '%s')", rainbowTableId, rainbowChains[0].StartPlaintext, rainbowChains[0].EndHash))
+	queryBuilder.WriteString(fmt.Sprintf("(%d, '%s', decode('%s', 'hex'))", rainbowTableId, rainbowChains[0].StartPlaintext, hex.EncodeToString(rainbowChains[0].EndHash)))
 
 	for _, r := range rainbowChains[1:] {
-		queryBuilder.WriteString(fmt.Sprintf(", (%d, '%s', '%s')", rainbowTableId, r.StartPlaintext, r.EndHash))
+		queryBuilder.WriteString(fmt.Sprintf(", (%d, '%s', decode('%s', 'hex'))", rainbowTableId, r.StartPlaintext, hex.EncodeToString(r.EndHash)))
 	}
 
 	queryBuilder.WriteString(service.getEndingModifier())
@@ -104,7 +106,7 @@ func (service *DbRainbowChainService) CountChainsForRainbowTable(rainbowTableId 
 	return finalChainCount, err
 }
 
-func (service *DbRainbowChainService) FindChainByTableIdAndEndHashIn(rainbowTableId int16, endHashes []string) ([]model.RainbowChain, error) {
+func (service *DbRainbowChainService) FindChainByTableIdAndEndHashIn(rainbowTableId int16, endHashes [][]byte) ([]model.RainbowChain, error) {
 	var rainbowChains []model.RainbowChain
 	err := service.databaseClient.
 		Model(&model.RainbowChain{}).

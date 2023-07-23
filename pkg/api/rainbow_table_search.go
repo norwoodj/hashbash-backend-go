@@ -1,6 +1,7 @@
 package api
 
 import (
+	"encoding/hex"
 	"encoding/json"
 	"github.com/jinzhu/gorm"
 	"net/http"
@@ -180,7 +181,7 @@ func createRainbowTableSearchByIdHandler(
 		}
 
 		response := api_model.RainbowTableSearchResponse{
-			Hash:     rainbowTableSearch.Hash,
+			Hash:     hex.EncodeToString(rainbowTableSearch.Hash),
 			SearchId: rainbowTableSearch.ID,
 			Status:   rainbowTableSearch.Status,
 		}

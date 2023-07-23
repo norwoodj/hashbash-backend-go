@@ -90,7 +90,7 @@ run-deps:
 	docker-compose -f docker/docker-compose-hashbash-deps.yaml up
 
 .PHONY: run
-run:
+run: version.txt
 	docker-compose -f docker/docker-compose-hashbash-deps.yaml -f docker/docker-compose-hashbash.yaml up
 
 

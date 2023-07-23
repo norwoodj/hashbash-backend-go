@@ -1,6 +1,7 @@
 package rainbow
 
 import (
+	"bytes"
 	"encoding/hex"
 	"fmt"
 	"github.com/jinzhu/gorm"
@@ -73,13 +74,14 @@ func (service *TableSearchJobService) runChainGenerationThread(
 	}
 }
 
-func (service *TableSearchJobService) getSearchBatches(indexByEndHash map[string]int64) [][]string {
-	endHashList := make([]string, 0)
+func (service *TableSearchJobService) getSearchBatches(indexByEndHash map[string]int64) [][][]byte {
+	endHashList := make([][]byte, 0)
 	for endHash := range indexByEndHash {
-		endHashList = append(endHashList, endHash)
+		endHashBytes, _ := hex.DecodeString(endHash)
+		endHashList = append(endHashList, endHashBytes)
 	}
 
-	endHashSearchBatches := make([][]string, 0)
+	endHashSearchBatches := make([][][]byte, 0)
 	for indexRange := range gopart.Partition(len(endHashList), service.jobConfig.SearchHashBatchSize) {
 		endHashSearchBatches = append(endHashSearchBatches, endHashList[indexRange.Low:indexRange.High])
 	}
@@ -89,7 +91,7 @@ func (service *TableSearchJobService) getSearchBatches(indexByEndHash map[string
 
 func (service *TableSearchJobService) runSearchThread(
 	rainbowTableId int16,
-	searchBatch []string,
+	searchBatch [][]byte,
 	foundChannel chan model.RainbowChain,
 ) {
 	defer close(foundChannel)
@@ -101,33 +103,32 @@ func (service *TableSearchJobService) runSearchThread(
 	}
 
 	for _, r := range rainbowChains {
-		if r.EndHash != "" {
+		if r.EndHash != nil {
 			foundChannel <- r
 		}
 	}
 }
 
 func (service *TableSearchJobService) generatePlaintextFromFoundEndHash(
-	searchHash string,
+	searchHash []byte,
 	foundChannels []chan model.RainbowChain,
 	indexByEndHash map[string]int64,
 	rainbowChainGeneratorService *chainGeneratorService,
 ) string {
 	for _, foundChannel := range foundChannels {
 		for rainbowChain := range foundChannel {
-			if rainbowChain.EndHash == "" {
+			if rainbowChain.EndHash == nil {
 				continue
 			}
 
-			chainIndex, _ := indexByEndHash[rainbowChain.EndHash]
+			chainIndex, _ := indexByEndHash[hex.EncodeToString(rainbowChain.EndHash)]
 			plaintextLink := rainbowChainGeneratorService.generateRainbowChainLinkFromPlaintext(
 				rainbowChain.StartPlaintext,
 				0,
 				int(chainIndex+1),
 			)
 
-			hashedPlaintextHex := hex.EncodeToString(plaintextLink.hashedPlaintext)
-			if hashedPlaintextHex == searchHash {
+			if bytes.Equal(plaintextLink.hashedPlaintext, searchHash) {
 				return plaintextLink.plaintext
 			}
 		}
@@ -146,17 +147,11 @@ func (service *TableSearchJobService) spawnChainGenerationThreads(
 	var currentPossibleIndex int64 = -1
 	var indexByEndHashMutex sync.Mutex
 
-	searchHash, err := hex.DecodeString(rainbowTableSearch.Hash)
-
-	if err != nil {
-		return fmt.Errorf("failed to decode hash string for search: %s", err)
-	}
-
 	waitGroup := sync.WaitGroup{}
 	for i := 0; i < service.jobConfig.NumThreads; i++ {
 		waitGroup.Add(1)
 		go service.runChainGenerationThread(
-			searchHash,
+			rainbowTableSearch.Hash,
 			rainbowTable,
 			indexByEndHash,
 			hashFunctionProvider,

@@ -8,7 +8,6 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 
 	"github.com/heptiolabs/healthcheck"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -31,15 +30,6 @@ func StringOrDefault(value string, defaultValue string) string {
 	}
 
 	return value
-}
-
-func DoInitialDelay() {
-	initialDelay := viper.GetDuration("initial-delay")
-
-	if initialDelay != 0 {
-		log.Info().Msgf("Delaying startup by %s, to allow for mysql/rabbitmq to start up...", initialDelay)
-		time.Sleep(initialDelay)
-	}
 }
 
 func SetupLogging() error {

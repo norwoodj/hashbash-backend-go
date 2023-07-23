@@ -1,7 +1,6 @@
 package rainbow
 
 import (
-	"encoding/hex"
 	"github.com/norwoodj/hashbash-backend-go/pkg/model"
 )
 
@@ -64,6 +63,6 @@ func (service *chainGeneratorService) generateRainbowChain(startPlaintext string
 	endingLink := service.generateRainbowChainLinkFromPlaintext(startPlaintext, 0, chainLength)
 	return model.RainbowChain{
 		StartPlaintext: startPlaintext,
-		EndHash:        hex.EncodeToString(endingLink.hashedPlaintext),
+		EndHash:        endingLink.hashedPlaintext,
 	}
 }

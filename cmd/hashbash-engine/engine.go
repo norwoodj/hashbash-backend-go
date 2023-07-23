@@ -72,8 +72,6 @@ func hashbashEngine(_ *cobra.Command, _ []string) {
 		os.Exit(1)
 	}
 
-	util.DoInitialDelay()
-
 	dbEngine := viper.GetString("database-engine")
 	db := dao.GetConnectionOrDie(dbEngine)
 	rainbowTableService := dao.NewRainbowTableService(db)

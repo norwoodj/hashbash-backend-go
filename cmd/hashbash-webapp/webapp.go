@@ -60,8 +60,6 @@ func hashbashWebapp(_ *cobra.Command, _ []string) {
 			Msg("Failed to setup logging")
 	}
 
-	util.DoInitialDelay()
-
 	db := dao.GetConnectionOrDie(viper.GetString("database-engine"))
 	rainbowTableService := dao.NewRainbowTableService(db)
 	rainbowTableSearchService := dao.NewRainbowTableSearchService(db)

@@ -10,7 +10,7 @@ const SearchNotFound = "NOT_FOUND"
 type RainbowTableSearch struct {
 	ID              int64      `gorm:"primary_key,column:id"`
 	RainbowTableId  int16      `gorm:"column:rainbow_table_id"`
-	Hash            string     `gorm:"column:hash"`
+	Hash            []byte     `gorm:"column:hash"`
 	Status          string     `gorm:"column:status"`
 	Password        string     `gorm:"column:password"`
 	SearchStarted   *time.Time `gorm:"column:search_started"`

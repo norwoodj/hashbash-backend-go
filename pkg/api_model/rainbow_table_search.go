@@ -1,6 +1,7 @@
 package api_model
 
 import (
+	"encoding/hex"
 	"github.com/norwoodj/hashbash-backend-go/pkg/model"
 	"time"
 )
@@ -37,7 +38,7 @@ func ConvertRainbowTableSearchToApiModel(rainbowTableSearch model.RainbowTableSe
 	return RainbowTableSearch{
 		ID:              rainbowTableSearch.ID,
 		RainbowTableId:  rainbowTableSearch.RainbowTableId,
-		Hash:            rainbowTableSearch.Hash,
+		Hash:            hex.EncodeToString(rainbowTableSearch.Hash),
 		Status:          rainbowTableSearch.Status,
 		Password:        rainbowTableSearch.Password,
 		SearchStarted:   rainbowTableSearch.SearchStarted,

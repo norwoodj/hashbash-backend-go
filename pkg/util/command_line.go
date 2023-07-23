@@ -33,7 +33,6 @@ func possibleLogLevels() []string {
 func AddDefaultFlags(flags *pflag.FlagSet) {
 	logLevelUsage := fmt.Sprintf("Level of logs that should printed, one of (%s)", strings.Join(possibleLogLevels(), ", "))
 	flags.StringP("log-level", "l", "info", logLevelUsage)
-	flags.Duration("initial-delay", 0, "Time to delay startup to allow for database/rabbit to start (for local docker dev)")
 	flags.StringSlice("management-addr", []string{}, "host:port interfaces on which to serve management http traffic, may be repeated")
 	flags.StringSlice("management-name", []string{}, "systemd socket name on which to serve management http traffic, may be repeated")
 	flags.StringSlice("management-sock", []string{}, "File paths of sockets on which to serve management http traffic, may be repeated")

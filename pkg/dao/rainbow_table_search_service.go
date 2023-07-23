@@ -1,6 +1,7 @@
 package dao
 
 import (
+	"encoding/hex"
 	"github.com/jinzhu/gorm"
 	"github.com/norwoodj/hashbash-backend-go/pkg/model"
 	"time"
@@ -59,17 +60,18 @@ func (service *DbRainbowTableSearchService) CreateRainbowTableSearch(rainbowTabl
 		return model.RainbowTableSearch{}, RainbowTableNotExistsError{ID: rainbowTableId}
 	}
 
-	if !isValidHash(rainbowTable.HashFunction, hash) {
+	hashBytes, err := hex.DecodeString(hash)
+	if err != nil {
 		return model.RainbowTableSearch{}, InvalidHashError{Hash: hash, HashFunctionName: rainbowTable.HashFunction}
 	}
 
 	rainbowTableSearch := model.RainbowTableSearch{
 		RainbowTableId: rainbowTableId,
-		Hash:           hash,
+		Hash:           hashBytes,
 		Status:         model.StatusQueued,
 	}
 
-	err := service.databaseClient.
+	err = service.databaseClient.
 		Save(&rainbowTableSearch).
 		Error
 

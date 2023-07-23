@@ -14,11 +14,6 @@ import (
 
 const dbName = "hashbash"
 
-// You know, this isn't really that important, and the frontend checks it anyway. so sue me
-func isValidHash(hashFunctionName string, hash string) bool {
-	return true
-}
-
 func AddDatabaseFlags(flags *pflag.FlagSet) {
 	flags.String("database-engine", "postgres", "The type of database backend to use (mysql or postgresql)")
 	flags.String("database-host", "localhost", "The hostname or IP address of the hashbash database")
