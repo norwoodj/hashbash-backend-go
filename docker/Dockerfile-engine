@@ -6,7 +6,7 @@ WORKDIR /opt/hashbash
 COPY go.mod go.sum ./
 RUN go mod download
 
-COPY . /opt/hashbash/
+COPY . ./
 WORKDIR /opt/hashbash/cmd/hashbash-engine
 RUN go build -ldflags "-X main.version=$(cat /opt/hashbash/version.txt)"
 
