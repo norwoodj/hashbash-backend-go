@@ -46,7 +46,7 @@ services:
         target: 55672
 
   nginx:
-    image: jnorwood/hashbash-nginx:23.0724.0
+    image: jnorwood/hashbash-nginx:23.0725.0
     volumes:
       - type: volume
         source: hashbash-sockets
