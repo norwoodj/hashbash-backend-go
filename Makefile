@@ -12,13 +12,13 @@ build: hashbash-cli hashbash-engine hashbash-webapp
 	:
 
 hashbash-cli: $(SRC_FILES)
-	go build -ldflags "-X main.version=$(shell git tag -l | tail -n 1)" -o hashbash-cli github.com/norwoodj/hashbash-backend-go/cmd/hashbash-cli
+	go build -ldflags "-X main.version=$(shell git describe)" -o hashbash-cli github.com/norwoodj/hashbash-backend-go/cmd/hashbash-cli
 
 hashbash-engine: $(SRC_FILES)
-	go build -ldflags "-X main.version=$(shell git tag -l | tail -n 1)" -o hashbash-engine github.com/norwoodj/hashbash-backend-go/cmd/hashbash-engine
+	go build -ldflags "-X main.version=$(shell git describe)" -o hashbash-engine github.com/norwoodj/hashbash-backend-go/cmd/hashbash-engine
 
 hashbash-webapp: $(SRC_FILES)
-	go build -ldflags "-X main.version=$(shell git tag -l | tail -n 1)" -o hashbash-webapp github.com/norwoodj/hashbash-backend-go/cmd/hashbash-webapp
+	go build -ldflags "-X main.buildTimestamp=$(shell date --utc --iso-8601=seconds) -X main.gitRevision=$(shell git rev-parse HEAD) -X main.version=$(shell git describe)" -o hashbash-webapp github.com/norwoodj/hashbash-backend-go/cmd/hashbash-webapp
 
 deb:
 	debuild

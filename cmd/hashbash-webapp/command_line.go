@@ -12,11 +12,13 @@ import (
 	"github.com/spf13/viper"
 )
 
-func newRootCommand(version string) *cobra.Command {
+func newRootCommand(buildTimestamp string, gitRevision string, version string) *cobra.Command {
 	var rootCmd = &cobra.Command{
-		Use:     "hashbash-webapp",
-		Short:   "Serve the hashbash web application",
-		Run:     hashbashWebapp,
+		Use:   "hashbash-webapp",
+		Short: "Serve the hashbash web application",
+		Run: func(_ *cobra.Command, _ []string) {
+			hashbashWebapp(buildTimestamp, gitRevision, version)
+		},
 		Version: version,
 	}
 

@@ -14,7 +14,6 @@ import (
 	"github.com/norwoodj/hashbash-backend-go/pkg/rabbitmq"
 	"github.com/norwoodj/hashbash-backend-go/pkg/util"
 	"github.com/rs/zerolog/log"
-	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"golang.org/x/sync/errgroup"
 )
@@ -52,7 +51,7 @@ func walkRoutes(router *mux.Router) {
 	})
 }
 
-func hashbashWebapp(_ *cobra.Command, _ []string) {
+func hashbashWebapp(buildTimestamp string, gitRevision string, version string) {
 	err := util.SetupLogging()
 	if err != nil {
 		log.Fatal().
@@ -77,6 +76,7 @@ func hashbashWebapp(_ *cobra.Command, _ []string) {
 	router := mux.NewRouter()
 	api.AddRainbowTableRoutes(router, rainbowTableService, hashbashProducers)
 	api.AddRainbowTableSearchRoutes(router, rainbowTableSearchService, hashbashProducers)
+	api.AddVersionRoutes(router, buildTimestamp, gitRevision, version)
 
 	frontendTemplatesDir := viper.GetString("frontend-template-path")
 	err = frontend.RegisterTemplateHandler(router, frontendTemplatesDir)

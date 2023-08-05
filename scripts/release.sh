@@ -16,8 +16,9 @@ function main {
 
 	EMAIL=$(git config user.email) gbp dch --release --new-version=${new_release}
 
-	git commit -am "Release version ${new_release}"
-	git tag "${new_release}"
+	local release_message="Release version ${new_release}"
+	git commit -am "${release_message}"
+	git tag "${new_release}" -am "${release_message}"
 }
 
 main

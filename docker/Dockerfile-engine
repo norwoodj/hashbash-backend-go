@@ -7,12 +7,11 @@ COPY go.mod go.sum ./
 RUN go mod download
 
 COPY . ./
-WORKDIR /opt/hashbash/cmd/hashbash-engine
-RUN go build
+RUN make hashbash-engine
 
 
 # Copy built binary into the final image
 FROM debian:bookworm-20230703@sha256:60774985572749dc3c39147d43089d53e7ce17b844eebcf619d84467160217ab
-COPY --from=build /opt/hashbash/cmd/hashbash-engine/hashbash-engine /
+COPY --from=build /opt/hashbash/hashbash-engine /
 EXPOSE 8081
 ENTRYPOINT ["/hashbash-engine"]
