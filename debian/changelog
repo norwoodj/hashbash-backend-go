@@ -1,3 +1,10 @@
+hashbash-backend (2023.8.1) jammy; urgency=medium
+
+  * chore: updates docs to reflect new local run port
+  * feat: Passes additional version info and adds a server version endpoint
+
+ -- John Norwood <norwood.john.m@gmail.com>  Sat, 05 Aug 2023 22:23:24 +0100
+
 hashbash-backend (2023.8.0) jammy; urgency=medium
 
   * chore: testing release process
