@@ -8,7 +8,7 @@ RUN go mod download
 
 COPY . ./
 WORKDIR /opt/hashbash/cmd/hashbash-engine
-RUN go build -ldflags "-X main.version=$(cat /opt/hashbash/version.txt)"
+RUN go build
 
 
 # Copy built binary into the final image

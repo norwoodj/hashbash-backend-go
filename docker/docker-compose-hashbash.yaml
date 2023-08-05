@@ -23,10 +23,10 @@ services:
       HASHBASH_DATABASE_USERNAME: postgres
       HASHBASH_DATABASE_PASSWORD: postgres
       HASHBASH_RABBITMQ_HOST: rabbitmq
-      HASHBASH_MANAGEMENT_ADDR: 0.0.0.0:8082
+      HASHBASH_MANAGEMENT_ADDR: 0.0.0.0:23282
     ports:
-      - published: 8082
-        target: 8082
+      - published: 23282
+        target: 23282
     volumes:
       - type: bind
         source: ../scripts
@@ -57,10 +57,10 @@ services:
       HASHBASH_DATABASE_PASSWORD: postgres
       HASHBASH_RABBITMQ_HOST: rabbitmq
       HASHBASH_HTTP_SOCK: /run/hashbash/webapp.sock
-      HASHBASH_MANAGEMENT_ADDR: 0.0.0.0:8081
+      HASHBASH_MANAGEMENT_ADDR: 0.0.0.0:23281
     ports:
-      - published: 8081
-        target: 8081
+      - published: 23281
+        target: 23281
     volumes:
       - type: bind
         source: ../scripts
