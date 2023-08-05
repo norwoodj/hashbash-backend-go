@@ -5,7 +5,6 @@ CONSUMERS_IMAGE := hashbash-consumers-go
 MIGRATE_IMAGE := hashbash-migrate
 WEBAPP_IMAGE := hashbash-webapp-go
 
-
 ##
 # Build targets
 ##
