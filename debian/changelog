@@ -1,3 +1,9 @@
+hashbash-backend (2023.8.0) jammy; urgency=medium
+
+  * chore: testing release process
+
+ -- John Norwood <norwood.john.m@gmail.com>  Sat, 05 Aug 2023 13:36:22 +0100
+
 hashbash-backend (23.0725.0) unstable; urgency=low
 
   * fix: Fixes longstanding annoying UI bug where the content of the app bar wasn't centered vertically
