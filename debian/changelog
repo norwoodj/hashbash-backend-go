@@ -1,1 +1,100 @@
-hashbash-backend (_VERSION) stable; urgency=low
+hashbash-backend (23.0725.0) unstable; urgency=low
+
+  * fix: Fixes longstanding annoying UI bug where the content of the app bar wasn't centered vertically
+  * feat: Store the bytes of hashes as BYTEA in the database now, rather than hex encoded strings
+
+ -- John Norwood <norwood.john.m@gmail.com>  Mon, 24 Jul 2023 17:49:42 +0100
+
+hashbash-backend (23.0724.0) unstable; urgency=low
+
+  * chore: Cleans up and modernizes docker configuration
+
+ -- John Norwood <norwood.john.m@gmail.com>  Sun, 23 Jul 2023 22:10:47 +0100
+
+hashbash-backend (21.1027.0) unstable; urgency=low
+
+  * fix: adds runtime directory for socket
+
+ -- John Norwood <norwood.john.m@gmail.com>  Wed, 27 Oct 2021 03:48:49 +0000
+
+hashbash-backend (21.1011.0) unstable; urgency=low
+
+  * feat: cleans up deb installation a bit moving files to more sensible places for hashbash
+
+ -- John Norwood <norwood.john.m@gmail.com>  Mon, 11 Oct 2021 16:16:20 +0000
+
+hashbash-backend (21.1007.0) unstable; urgency=low
+
+  * fix: runs hashbash services under hashbash user
+
+ -- John Norwood <norwood.john.m@gmail.com>  Wed, 6 Oct 2021 22:25:19 +0000
+
+hashbash-backend (21.0828.3) unstable; urgency=low
+
+  * fix: uses new http server logic in engine metrics server now
+
+ -- John Norwood <norwood.john.m@gmail.com>  Sat, 28 Aug 2021 15:43:23 +0000
+
+hashbash-backend (21.0828.2) unstable; urgency=low
+
+  * fix: socket file descriptor names
+
+ -- John Norwood <norwood.john.m@gmail.com>  Sat, 28 Aug 2021 14:50:04 +0000
+
+hashbash-backend (21.0828.1) unstable; urgency=low
+
+  * fix: install management sockets in deb as well
+  * fix: fixes pattern in changelog
+  * fix: systemd socket activation so names work
+
+ -- John Norwood <norwood.john.m@gmail.com>  Sat, 28 Aug 2021 14:19:18 +0000
+
+hashbash-backend (21.0828.0) unstable; urgency=low
+
+  * feat: adds sockets for engine and webapp managment interfaces as well
+  * feat: adds systemd socket for the webapp to listen on
+  * feat: updates to new json logger
+  * feat: adds new CLI options to start servers on unix/systemd sockets and multiple tcp interfaces
+
+ -- John Norwood <norwood.john.m@gmail.com>  Sat, 28 Aug 2021 00:52:06 +0000
+
+hashbash-backend (20.1218.0) unstable; urgency=low
+
+  * fix: fixes cli and webapp builds
+  * fix: fixes path to go executable
+  * fix: removes unnecessary file logging, updates systemd to redirect logs from stdout
+  * feat: actually handles database errors now and hopefully fixes the log file issues
+
+ -- John Norwood <norwood.john.m@gmail.com>  Fri, 18 Dec 2020 18:27:54 +0000
+
+hashbash-backend (20.0119.0) unstable; urgency=low
+
+  * feat: updates to new rabbit client version so that vhost can be configured
+
+ -- John Norwood <norwood.john.m@gmail.com>  Sun, 19 Jan 2020 14:46:28 +0000
+
+hashbash-backend (20.0105.0) unstable; urgency=low
+
+  * fix: fixes logging to a file for the hashbash-engine, logs webapp requests now
+
+ -- John Norwood <norwood.john.m@gmail.com>  Sun, 5 Jan 2020 15:43:17 +0000
+
+hashbash-backend (20.0104.1) unstable; urgency=low
+
+  * feat: fixes services so they start eventually and adds frontend templates to deb
+
+ -- John Norwood <norwood.john.m@gmail.com>  Sat, 4 Jan 2020 18:59:12 +0000
+
+hashbash-backend (20.0104.0) unstable; urgency=low
+
+  * feat: got local docker run working again and finalizes debian config
+  * fix: fixes last bugs with postgres switch, seems to work now
+  * feat: switches to postgres! Also adds database migrations to stand up the schema in postgres
+  * feat: makes app respond to log file environment variable
+
+ -- John Norwood <norwood.john.m@gmail.com>  Sat, 4 Jan 2020 17:55:18 +0000
+
+hashbash-backend (19.1231.0) unstable; urgency=low
+
+ -- John Norwood <norwood.john.m@gmail.com>  Tue, 31 Dec 2019 04:18:01 +0000
+
