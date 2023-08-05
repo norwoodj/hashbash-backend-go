@@ -26,7 +26,8 @@ complicated applications in go, as well as gaining experience using the followin
 
 
 ### Building and Developing Locally
-There is a docker-compose setup for running locally. To start run:
+There is a docker-compose setup for running locally. To start run the following,
+then navigate to http://localhost:23280 in your browser.
 ```
 make run
 ```
