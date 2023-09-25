@@ -1,3 +1,10 @@
+hashbash-backend (2023.9.1) jammy; urgency=medium
+
+  * chore: updates image versions from frontend repo
+  * chore: Removes no longer needed service and socket files
+
+ -- John Norwood <norwood.john.m@gmail.com>  Tue, 26 Sep 2023 00:51:28 +0100
+
 hashbash-backend (2023.8.1) jammy; urgency=medium
 
   * chore: updates docs to reflect new local run port
