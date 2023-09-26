@@ -1,3 +1,9 @@
+hashbash-backend (2023.9.2) jammy; urgency=medium
+
+  * chore: Updates gorm version to work with newer versions of postgres. This also removes mysql support
+
+ -- John Norwood <norwood.john.m@gmail.com>  Tue, 26 Sep 2023 01:27:44 +0100
+
 hashbash-backend (2023.9.1) jammy; urgency=medium
 
   * chore: updates image versions from frontend repo
