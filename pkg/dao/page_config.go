@@ -1,7 +1,7 @@
 package dao
 
 import (
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 )
 
 type PageConfig struct {

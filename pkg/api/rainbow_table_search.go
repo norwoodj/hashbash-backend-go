@@ -3,7 +3,8 @@ package api
 import (
 	"encoding/hex"
 	"encoding/json"
-	"github.com/jinzhu/gorm"
+	"errors"
+	"gorm.io/gorm"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -114,7 +115,7 @@ func getRainbowTableSearchByIdHandler(rainbowTableSearchService dao.RainbowTable
 		}
 
 		rainbowTableSearch, err := rainbowTableSearchService.FindRainbowTableSearchById(rainbowTableSearchId)
-		if gorm.IsRecordNotFoundError(err) {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			writer.WriteHeader(http.StatusNotFound)
 			return
 		} else if err != nil {

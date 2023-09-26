@@ -59,7 +59,7 @@ func hashbashWebapp(buildTimestamp string, gitRevision string, version string) {
 			Msg("Failed to setup logging")
 	}
 
-	db := dao.GetConnectionOrDie(viper.GetString("database-engine"))
+	db := dao.GetConnectionOrDie()
 	rainbowTableService := dao.NewRainbowTableService(db)
 	rainbowTableSearchService := dao.NewRainbowTableSearchService(db)
 

@@ -2,12 +2,13 @@ package api
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
-	"github.com/jinzhu/gorm"
 	"github.com/norwoodj/hashbash-backend-go/pkg/api_model"
 	"github.com/norwoodj/hashbash-backend-go/pkg/model"
 	"github.com/norwoodj/hashbash-backend-go/pkg/rabbitmq"
 	"github.com/norwoodj/hashbash-backend-go/pkg/util"
+	"gorm.io/gorm"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -277,7 +278,7 @@ func deleteRainbowTableByIdHandler(
 		}
 
 		rainbowTable, err := rainbowTableService.FindRainbowTableById(convertRainbowTableId(rainbowTableId))
-		if gorm.IsRecordNotFoundError(err) {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			writer.WriteHeader(http.StatusNotFound)
 			return
 		} else if err != nil {

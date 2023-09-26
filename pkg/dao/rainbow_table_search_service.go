@@ -2,8 +2,8 @@ package dao
 
 import (
 	"encoding/hex"
-	"github.com/jinzhu/gorm"
 	"github.com/norwoodj/hashbash-backend-go/pkg/model"
+	"gorm.io/gorm"
 	"time"
 )
 

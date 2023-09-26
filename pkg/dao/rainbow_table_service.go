@@ -1,8 +1,9 @@
 package dao
 
 import (
-	"github.com/jinzhu/gorm"
+	"errors"
 	"github.com/norwoodj/hashbash-backend-go/pkg/model"
+	"gorm.io/gorm"
 	"time"
 )
 
@@ -31,7 +32,7 @@ func (service *DbRainbowTableService) CreateRainbowTable(rainbowTable *model.Rai
 	_, err := service.FindRainbowTableByName(rainbowTable.Name)
 	if err == nil {
 		return nil, RainbowTableExistsError{Name: rainbowTable.Name}
-	} else if !gorm.IsRecordNotFoundError(err) {
+	} else if !errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, err
 	}
 

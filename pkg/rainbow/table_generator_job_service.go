@@ -1,8 +1,9 @@
 package rainbow
 
 import (
+	"errors"
 	"fmt"
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 	"sync/atomic"
 
 	"github.com/norwoodj/hashbash-backend-go/pkg/dao"
@@ -203,7 +204,7 @@ func (service *TableGeneratorJobService) updateFinalChainCountAndStatus(rainbowT
 func (service *TableGeneratorJobService) RunGenerateJobForTable(rainbowTableId int16) error {
 	rainbowTable, err := service.rainbowTableService.FindRainbowTableById(rainbowTableId)
 
-	if gorm.IsRecordNotFoundError(err) {
+	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return fmt.Errorf("rainbow table with ID %d not found, cannot generate", rainbowTableId)
 	} else if err != nil {
 		return err

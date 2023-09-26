@@ -3,8 +3,9 @@ package rainbow
 import (
 	"bytes"
 	"encoding/hex"
+	"errors"
 	"fmt"
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 	"sync"
 	"sync/atomic"
 
@@ -167,14 +168,14 @@ func (service *TableSearchJobService) spawnChainGenerationThreads(
 
 func (service *TableSearchJobService) RunSearchJob(searchId int64) error {
 	rainbowTableSearch, err := service.rainbowTableSearchService.FindRainbowTableSearchById(searchId)
-	if gorm.IsRecordNotFoundError(err) {
+	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return fmt.Errorf("no rainbow table search object found for ID %d", searchId)
 	} else if err != nil {
 		return err
 	}
 
 	rainbowTable, err := service.rainbowTableService.FindRainbowTableById(rainbowTableSearch.RainbowTableId)
-	if gorm.IsRecordNotFoundError(err) {
+	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return fmt.Errorf("no rainbow table object found for ID %d", rainbowTableSearch.RainbowTableId)
 	} else if err != nil {
 		return err

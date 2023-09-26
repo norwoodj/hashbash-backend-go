@@ -7,10 +7,10 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/jinzhu/gorm"
 	"github.com/norwoodj/hashbash-backend-go/pkg/model"
 	"github.com/rs/zerolog/log"
 	"golang.org/x/exp/slices"
+	"gorm.io/gorm"
 )
 
 type insertIgnoreConflictClauseProvider interface {
@@ -37,17 +37,8 @@ func (postgresqlInsertIgnoreConflictClauseProvider) getEndingModifier() string {
 	return "ON CONFLICT(rainbow_table_id, end_hash) DO NOTHING"
 }
 
-func getInsertIgnoreConflictClauseProviderForEngine(engine string) (insertIgnoreConflictClauseProvider, error) {
-	switch engine {
-	case "mysql":
-		return mysqlInsertIgnoreConflictClauseProvider{}, nil
-	case "postgres":
-		return postgresqlInsertIgnoreConflictClauseProvider{}, nil
-	case "postgresql":
-		return postgresqlInsertIgnoreConflictClauseProvider{}, nil
-	default:
-		return nil, fmt.Errorf("no engine %s found", engine)
-	}
+func getInsertIgnoreConflictClauseProviderForEngine() (insertIgnoreConflictClauseProvider, error) {
+	return postgresqlInsertIgnoreConflictClauseProvider{}, nil
 }
 
 type RainbowChainService interface {
@@ -61,8 +52,8 @@ type DbRainbowChainService struct {
 	insertIgnoreConflictClauseProvider
 }
 
-func NewRainbowChainService(db *gorm.DB, databaseEngine string) RainbowChainService {
-	insertIgnoreConflictClauseProvider, err := getInsertIgnoreConflictClauseProviderForEngine(databaseEngine)
+func NewRainbowChainService(db *gorm.DB) RainbowChainService {
+	insertIgnoreConflictClauseProvider, err := getInsertIgnoreConflictClauseProviderForEngine()
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to start rainbow chain service")
 		os.Exit(1)
