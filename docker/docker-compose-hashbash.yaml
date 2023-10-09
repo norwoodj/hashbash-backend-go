@@ -2,7 +2,7 @@ version: "3.7"
 
 services:
   hashbash-engine:
-    image: jnorwood/hashbash-consumers-go:current
+    image: jnorwood/hashbash-consumers-go
     build:
       context: ..
       dockerfile: docker/Dockerfile-engine
@@ -34,7 +34,7 @@ services:
         read_only: true
 
   hashbash-webapp:
-    image: jnorwood/hashbash-webapp-go:current
+    image: jnorwood/hashbash-webapp-go
     build:
       context: ..
       dockerfile: docker/Dockerfile-webapp

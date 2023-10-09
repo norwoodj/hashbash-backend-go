@@ -31,7 +31,7 @@ services:
         target: /run/hashbash-nginx
 
   migrate:
-    image: jnorwood/hashbash-migrate:current
+    image: jnorwood/hashbash-migrate
     build:
       context: ..
       dockerfile: docker/Dockerfile-migrate
@@ -56,7 +56,7 @@ services:
         read_only: true
 
   socat:
-    image: jnorwood/hashbash-socat:current
+    image: jnorwood/hashbash-socat
     build:
       context: docker
       dockerfile: Dockerfile-socat

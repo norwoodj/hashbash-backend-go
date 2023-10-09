@@ -41,9 +41,9 @@ release:
 	./scripts/release.sh
 
 push: images
-	docker tag $(DOCKER_REPOSITORY)/$(CONSUMERS_IMAGE):current $(DOCKER_REPOSITORY)/$(CONSUMERS_IMAGE):$(shell git tag -l | tail -n 1)
-	docker tag $(DOCKER_REPOSITORY)/$(WEBAPP_IMAGE):current $(DOCKER_REPOSITORY)/$(WEBAPP_IMAGE):$(shell git tag -l | tail -n 1)
-	docker tag $(DOCKER_REPOSITORY)/$(MIGRATE_IMAGE):current $(DOCKER_REPOSITORY)/$(MIGRATE_IMAGE):$(shell git tag -l | tail -n 1)
+	docker tag $(DOCKER_REPOSITORY)/$(CONSUMERS_IMAGE) $(DOCKER_REPOSITORY)/$(CONSUMERS_IMAGE):$(shell git tag -l | tail -n 1)
+	docker tag $(DOCKER_REPOSITORY)/$(WEBAPP_IMAGE) $(DOCKER_REPOSITORY)/$(WEBAPP_IMAGE):$(shell git tag -l | tail -n 1)
+	docker tag $(DOCKER_REPOSITORY)/$(MIGRATE_IMAGE) $(DOCKER_REPOSITORY)/$(MIGRATE_IMAGE):$(shell git tag -l | tail -n 1)
 	docker push $(DOCKER_REPOSITORY)/$(CONSUMERS_IMAGE):$(shell git tag -l | tail -n 1)
 	docker push $(DOCKER_REPOSITORY)/$(WEBAPP_IMAGE):$(shell git tag -l | tail -n 1)
 	docker push $(DOCKER_REPOSITORY)/$(MIGRATE_IMAGE):$(shell git tag -l | tail -n 1)
