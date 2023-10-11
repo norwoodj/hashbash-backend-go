@@ -2,7 +2,7 @@ package rabbitmq
 
 import (
 	"github.com/norwoodj/rabbitmq-client-go/rabbitmq"
-	"github.com/streadway/amqp"
+	amqp "github.com/rabbitmq/amqp091-go"
 )
 
 type HashbashMqProducers struct {

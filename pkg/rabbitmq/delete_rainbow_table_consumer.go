@@ -5,7 +5,7 @@ import (
 	"github.com/norwoodj/hashbash-backend-go/pkg/dao"
 	"github.com/norwoodj/rabbitmq-client-go/rabbitmq"
 	"github.com/rs/zerolog/log"
-	"github.com/streadway/amqp"
+	amqp "github.com/rabbitmq/amqp091-go"
 )
 
 type DeleteRainbowTableWorker struct {

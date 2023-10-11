@@ -22,7 +22,7 @@ complicated applications in go, as well as gaining experience using the followin
 * [gorilla web toolkit](https://www.gorillatoolkit.org)
 * [gorm](https://gorm.io)
 * [prometheus/client_golang](https://github.com/prometheus/client_golang)
-* [streadway/amqp](https://github.com/streadway/amqp)
+* [amqp091-go](https://github.com/rabbitmq/amqp091-go)
 
 
 ### Building and Developing Locally
