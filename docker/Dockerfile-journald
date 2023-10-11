@@ -1,0 +1,5 @@
+FROM debian:bookworm-20230703@sha256:60774985572749dc3c39147d43089d53e7ce17b844eebcf619d84467160217ab
+LABEL maintainer=norwood.john.m@gmail.com
+
+RUN apt update && apt install -y socat
+ENTRYPOINT ["socat", "UNIX-RECV:/run/systemd/journal/dev-log,ignoreeof", "STDOUT"]

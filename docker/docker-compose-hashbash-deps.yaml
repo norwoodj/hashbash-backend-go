@@ -2,23 +2,13 @@ version: "3.7"
 
 services:
   postgresql:
-    image: postgres:11.5
+    image: postgres:14-bookworm@sha256:3be9a3ad9e8308654b9d26ed2dd0be1767cff86c2d8d31d6125f188735e47d7f
     environment:
       POSTGRES_DB: hashbash
       POSTGRES_PASSWORD: postgres
-    ports:
-      - published: 5432
-        target: 5432
 
   rabbitmq:
-    image: rabbitmq:3.7-management-alpine
-    ports:
-      - published: 5672
-        target: 5672
-      - published: 15672
-        target: 15672
-      - published: 55672
-        target: 55672
+    image: rabbitmq:3.9-management@sha256:74c6f00ed725ca77d8c0d416e01e99cfbaba17aa77bc2d2846d9c0066ab5be61
 
   nginx:
     image: jnorwood/hashbash-nginx:2023.8.1
@@ -29,6 +19,9 @@ services:
       - type: volume
         source: hashbash-nginx-runtime
         target: /run/hashbash-nginx
+      - type: volume
+        source: hashbash-nginx-logs
+        target: /run/systemd/journal
 
   migrate:
     image: jnorwood/hashbash-migrate
@@ -55,6 +48,16 @@ services:
         target: /opt/scripts
         read_only: true
 
+  journald:
+    image: jnorwood/hashbash-journald
+    build:
+      context: docker
+      dockerfile: Dockerfile-journald
+    volumes:
+      - type: volume
+        source: hashbash-nginx-logs
+        target: /run/systemd/journal
+
   socat:
     image: jnorwood/hashbash-socat
     build:
@@ -70,4 +73,5 @@ services:
 
 volumes:
   hashbash-sockets:
+  hashbash-nginx-logs:
   hashbash-nginx-runtime:
