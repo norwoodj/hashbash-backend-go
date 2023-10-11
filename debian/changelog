@@ -1,3 +1,11 @@
+hashbash-backend (2023.10.0) jammy; urgency=medium
+
+  * chore: no longer tag local images :current
+  * fix: Makes docker changes to accomodate nginx now access logging to journal
+  * chore: Updates to new non-deprecated amqp library, and to new version of rabbitmq-client-go for bugfixes
+
+ -- John Norwood <norwood.john.m@gmail.com>  Wed, 11 Oct 2023 21:48:25 +0100
+
 hashbash-backend (2023.9.2) jammy; urgency=medium
 
   * chore: Updates gorm version to work with newer versions of postgres. This also removes mysql support
