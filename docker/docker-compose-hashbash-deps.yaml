@@ -11,7 +11,7 @@ services:
     image: rabbitmq:3.9-management@sha256:74c6f00ed725ca77d8c0d416e01e99cfbaba17aa77bc2d2846d9c0066ab5be61
 
   nginx:
-    image: jnorwood/hashbash-nginx:2023.8.1
+    image: jnorwood/hashbash-nginx:2023.10.0
     volumes:
       - type: volume
         source: hashbash-sockets
