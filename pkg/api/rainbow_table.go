@@ -102,7 +102,10 @@ func getRainbowTableByIdHandler(rainbowTableService dao.RainbowTableService) fun
 		}
 
 		rainbowTable, err := rainbowTableService.FindRainbowTableById(convertRainbowTableId(rainbowTableId))
-		if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			writer.WriteHeader(http.StatusNotFound)
+			return
+		} else if err != nil {
 			unexpectedError(err, writer)
 			return
 		}
