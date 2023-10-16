@@ -1,3 +1,10 @@
+hashbash-backend (2023.10.1) jammy; urgency=medium
+
+  * chore: Updates nginx image to 2023.10.0
+  * fix: Returns 404 on non-existant rainbow table
+
+ -- John Norwood <norwood.john.m@gmail.com>  Mon, 16 Oct 2023 19:32:16 +0100
+
 hashbash-backend (2023.10.0) jammy; urgency=medium
 
   * chore: no longer tag local images :current
