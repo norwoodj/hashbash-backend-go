@@ -7,18 +7,18 @@ project I wrote a couple years ago. That project was itself a rewrite of a C++ i
 wrote in college.
 
 The goal in writing the java version was both to implement a web interface around rainbow tables, providing a frontend
-for viewing/searching rainbow tables, and to implement the generation of rainbow tables using [spring batch](https://spring.io/projects/spring-batch).
+for viewing/searching them, and to implement the generation of rainbow tables using [spring batch](https://spring.io/projects/spring-batch).
 The company I worked for at that time heavily used spring batch, java, and react and so writing that project was my
 way of getting a deep-dive into all of those technologies.
 
-This version of the project is a complete rewrite of the java version of the project in [go](https://golang.org). I _love_
-go, and have been trying to convince my coworkers/friends/grandparents of its merits for a long time, to little avail.
+This version of the project is a complete rewrite of the java version of the project in [go](https://golang.org). When
+I wrote this, I was just learning go, and was really impressed by the performance and resource utilization of the
+language. Rewriting the project in go gave me a way to do an apples to apples comparison of performance between identical
+projects implemented in java and go respectively. As expected, the go version used a small fraction of the memory
+used by the java version. I compiled the complete results of my test into a [blog post](https://medium.com/@norwood.john.m/hashbash-a-comparison-of-cpu-and-io-bound-applications-in-go-and-java-across-multiple-metrics-d358df6e03b1).
 
-This version of hashbash is my next aggressive attempt to convince everyone. I have compared the performance of the java
-and go versions of this project and compiled the results into a [blog post](https://medium.com/@norwood.john.m/hashbash-a-comparison-of-cpu-and-io-bound-applications-in-go-and-java-across-multiple-metrics-d358df6e03b1).
-
-Aside from proving to the world how great go is, this was an excellent opportunity to get more familiarity with writing
-complicated applications in go, as well as gaining experience using the following wonderful libraries:
+Aside from running this experiment, this rewrite was an excellent opportunity to get more familiarity with writing
+complicated applications in go, as well as gaining experience using the following libraries:
 * [gorilla web toolkit](https://www.gorillatoolkit.org)
 * [gorm](https://gorm.io)
 * [prometheus/client_golang](https://github.com/prometheus/client_golang)
